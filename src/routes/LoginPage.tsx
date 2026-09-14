@@ -17,7 +17,7 @@ export function LoginPage() {
   const [signupSuccess, setSignupSuccess] = useState(false);
 
   if (!isSessionLoading && session) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/my-list" replace />;
   }
 
   async function handleSubmit(event: FormEvent) {

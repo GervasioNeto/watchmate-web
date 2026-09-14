@@ -20,7 +20,7 @@ export function AddSeriesPage() {
     setFeedback(null);
     try {
       await addSeries.mutateAsync(result.tmdbId);
-      navigate('/');
+      navigate('/my-list');
     } catch (err) {
       const message =
         err instanceof ApiError ? err.message : 'Não foi possível adicionar a série.';

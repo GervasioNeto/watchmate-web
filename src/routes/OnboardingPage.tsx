@@ -17,7 +17,7 @@ export function OnboardingPage() {
   const [error, setError] = useState<string | null>(null);
 
   if (!isGroupLoading && group) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/my-list" replace />;
   }
 
   async function handleJoin(event: FormEvent) {

@@ -4,6 +4,7 @@ import { AuthProvider } from '@/context/AuthContext';
 import { AddSeriesPage } from '@/routes/AddSeriesPage';
 import { HomePage } from '@/routes/HomePage';
 import { LoginPage } from '@/routes/LoginPage';
+import { MyListPage } from '@/routes/MyListPage';
 import { OnboardingPage } from '@/routes/OnboardingPage';
 import { RequireAuth } from '@/routes/RequireAuth';
 import { SeriesDetailPage } from '@/routes/SeriesDetailPage';
@@ -16,6 +17,7 @@ function App() {
       <AuthProvider>
         <BrowserRouter>
           <Routes>
+            <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route
               path="/onboarding"
@@ -26,10 +28,10 @@ function App() {
               }
             />
             <Route
-              path="/"
+              path="/my-list"
               element={
                 <RequireAuth>
-                  <HomePage />
+                  <MyListPage />
                 </RequireAuth>
               }
             />

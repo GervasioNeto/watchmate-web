@@ -48,8 +48,8 @@ export function SeriesDetailPage() {
     return (
       <div className="flex min-h-svh flex-col items-center justify-center gap-4 px-6 text-center">
         <p className="text-sm text-neutral-400">Série não encontrada.</p>
-        <Button variant="secondary" onClick={() => navigate('/')}>
-          Voltar pra Home
+        <Button variant="secondary" onClick={() => navigate('/my-list')}>
+          Voltar pra Minha Lista
         </Button>
       </div>
     );
