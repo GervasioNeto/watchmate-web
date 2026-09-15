@@ -60,7 +60,7 @@ export function ProfilePage() {
     <div className="min-h-svh pb-16">
       <AppHeader />
 
-      <div className="flex flex-col gap-6 px-4 py-6">
+      <div className="mx-auto flex max-w-xl flex-col gap-6 px-4 py-6">
         <section className="flex flex-col items-center gap-2">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-ultramarine font-heading text-2xl font-semibold text-white">
             {meLetter}

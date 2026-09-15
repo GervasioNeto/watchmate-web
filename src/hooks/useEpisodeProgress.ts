@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import type { EpisodeProgress } from '@/types/api';
 
@@ -7,6 +7,16 @@ export function useEpisodeProgress(seriesId: string) {
     queryKey: ['series', seriesId, 'progress'],
     queryFn: () => api.get<EpisodeProgress[]>(`/series/${seriesId}/progress`),
     enabled: !!seriesId,
+  });
+}
+
+export function useEpisodeProgressForSeries(seriesIds: string[]) {
+  return useQueries({
+    queries: seriesIds.map((seriesId) => ({
+      queryKey: ['series', seriesId, 'progress'],
+      queryFn: () => api.get<EpisodeProgress[]>(`/series/${seriesId}/progress`),
+      enabled: !!seriesId,
+    })),
   });
 }
 

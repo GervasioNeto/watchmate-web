@@ -23,7 +23,7 @@ export function AppHeader() {
 
   return (
     <header className="sticky top-0 z-20 border-b border-surface-border bg-surface/90 backdrop-blur">
-      <div className="flex items-center justify-between px-4 py-3">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         <NavLink to="/my-list" aria-label="Ir pra minha lista">
           <Wordmark />
         </NavLink>
