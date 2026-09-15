@@ -37,3 +37,14 @@ export function useJoinGroup() {
     },
   });
 }
+
+export function usePatchGroup() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (nome: string) => api.patch<Group>('/groups/me', { nome }),
+    onSuccess: (group) => {
+      queryClient.setQueryData(['group'], group);
+      queryClient.invalidateQueries({ queryKey: ['me'] });
+    },
+  });
+}

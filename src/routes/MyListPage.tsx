@@ -1,11 +1,10 @@
 import { Navigate, useNavigate } from 'react-router-dom';
+import { AppHeader } from '@/components/AppHeader';
 import { SeriesCard } from '@/components/SeriesCard';
 import { Button } from '@/components/Button';
-import { Wordmark } from '@/components/Wordmark';
 import { useMe } from '@/hooks/useMe';
 import { useGroup } from '@/hooks/useGroup';
 import { useSeries } from '@/hooks/useSeries';
-import { supabase } from '@/lib/supabase';
 
 export function MyListPage() {
   const navigate = useNavigate();
@@ -22,19 +21,10 @@ export function MyListPage() {
 
   return (
     <div className="min-h-svh pb-28">
-      <header className="px-4 pt-6 pb-2">
-        <div className="flex items-center justify-between">
-          <Wordmark />
-          <button
-            type="button"
-            onClick={() => supabase.auth.signOut()}
-            className="text-xs text-neutral-500 hover:text-neutral-300"
-          >
-            Sair
-          </button>
-        </div>
+      <AppHeader />
 
-        <div className="mt-4 flex items-center">
+      <div className="px-4 pt-4 pb-2">
+        <div className="flex items-center">
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-ultramarine font-heading text-sm font-semibold text-white ring-2 ring-surface">
             {meLetter}
           </div>
@@ -48,7 +38,7 @@ export function MyListPage() {
             {partner ? '♥' : '?'}
           </div>
         </div>
-      </header>
+      </div>
 
       {!partner && group && (
         <div className="mx-4 mb-4 rounded-xl border border-surface-border bg-surface-raised px-4 py-3">

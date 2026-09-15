@@ -17,9 +17,28 @@ export interface GroupMember {
 
 export interface Group {
   id: string;
+  nome: string | null;
   codigoConvite: string;
   criadoEm: string;
   membros: GroupMember[];
+}
+
+export interface GroupMemberSummary {
+  usuario: {
+    id: string;
+    nome: string | null;
+    email: string;
+  };
+}
+
+export interface MeGroupSummary {
+  nome: string | null;
+  codigoConvite: string;
+  membros: GroupMemberSummary[];
+}
+
+export interface Me extends User {
+  membroDoGrupo: { grupo: MeGroupSummary } | null;
 }
 
 export interface SeasonSnapshot {

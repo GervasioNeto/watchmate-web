@@ -6,6 +6,7 @@ import { HomePage } from '@/routes/HomePage';
 import { LoginPage } from '@/routes/LoginPage';
 import { MyListPage } from '@/routes/MyListPage';
 import { OnboardingPage } from '@/routes/OnboardingPage';
+import { ProfilePage } from '@/routes/ProfilePage';
 import { RequireAuth } from '@/routes/RequireAuth';
 import { SeriesDetailPage } from '@/routes/SeriesDetailPage';
 
@@ -48,6 +49,14 @@ function App() {
               element={
                 <RequireAuth>
                   <SeriesDetailPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <RequireAuth>
+                  <ProfilePage />
                 </RequireAuth>
               }
             />
