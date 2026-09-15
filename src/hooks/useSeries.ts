@@ -20,3 +20,15 @@ export function useAddSeries() {
     },
   });
 }
+
+export function useDeleteSeries() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (seriesId: string) => api.delete(`/series/${seriesId}`),
+    onSuccess: (_data, seriesId) => {
+      queryClient.setQueryData<TrackedSeries[]>(['series'], (old) =>
+        old?.filter((item) => item.id !== seriesId),
+      );
+    },
+  });
+}

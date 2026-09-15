@@ -56,6 +56,14 @@ export interface TrackedSeries {
   // Snapshot do TMDB no momento em que a série foi adicionada — não
   // atualiza sozinho se a série ganhar uma temporada nova depois.
   temporadas: SeasonSnapshot[];
+  sinopse: string | null;
+  notaMedia: number | null;
+  status: string | null;
+  backdropPath: string | null;
+  generos: string[];
+  primeiraExibicaoEm: string | null;
+  idiomaOriginal: string | null;
+  nomeOriginal: string | null;
 }
 
 export interface EpisodeProgress {
@@ -72,4 +80,13 @@ export interface SeriesSearchResult {
   name: string;
   posterPath: string | null;
   firstAirYear: number | null;
+}
+
+export interface SeasonEpisode {
+  numero: number;
+  titulo: string;
+  resumo: string | null;
+  dataExibicao: string | null;
+  duracaoMinutos: number | null;
+  imagem: string | null;
 }
