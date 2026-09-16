@@ -5,6 +5,7 @@ import { Button } from '@/components/Button';
 import { useGroup, usePatchGroup } from '@/hooks/useGroup';
 import { useMe, usePatchMe } from '@/hooks/useMe';
 import { supabase } from '@/lib/supabase';
+import { Copy } from 'lucide-react';
 
 export function ProfilePage() {
   const { data: me } = useMe();
@@ -19,6 +20,7 @@ export function ProfilePage() {
   const [groupNameInput, setGroupNameInput] = useState('');
   const [nameFeedback, setNameFeedback] = useState<string | null>(null);
   const [groupFeedback, setGroupFeedback] = useState<string | null>(null);
+  const [justCopiedInvite, setJustCopiedInvite] = useState(false);
 
   useEffect(() => {
     if (me) setNameInput(me.nome ?? '');
@@ -114,9 +116,35 @@ export function ProfilePage() {
 
             <div className="mt-4 border-t border-surface-border pt-4">
               <p className="text-xs text-neutral-400">Código de convite</p>
-              <p className="font-mono text-lg font-semibold tracking-[0.2em] text-amber">
-                {grupo.codigoConvite}
-              </p>
+
+              <div className="flex items-center gap-2">
+                <p className="font-mono text-lg font-semibold tracking-[0.2em] text-amber">
+                  {grupo.codigoConvite}
+                </p>
+
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(grupo.codigoConvite);
+                      setJustCopiedInvite(true);
+                      window.setTimeout(() => setJustCopiedInvite(false), 1500);
+                    }}
+                    className="rounded-md p-1.5 text-neutral-400 transition hover:bg-surface-border hover:text-white"
+                    title="Copiar código"
+                  >
+                    <Copy size={17} />
+                  </button>
+
+                  <span
+                    className={`pointer-events-none absolute bottom-full left-1/2 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-md bg-surface-border px-2 py-1 text-xs text-white transition-all duration-150 ${
+                      justCopiedInvite ? 'opacity-100' : 'translate-y-0.5 opacity-0'
+                    }`}
+                  >
+                    Copiado!
+                  </span>
+                </div>
+              </div>
             </div>
 
             <div className="mt-4 flex flex-col gap-3 border-t border-surface-border pt-4">

@@ -3,6 +3,7 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { AppHeader } from '@/components/AppHeader';
 import { ContinueWatchingCard } from '@/components/ContinueWatchingCard';
 import { SeriesCard } from '@/components/SeriesCard';
+import { Skeleton } from '@/components/Skeleton';
 import { Button } from '@/components/Button';
 import { useEpisodeProgressForSeries } from '@/hooks/useEpisodeProgress';
 import { useMe } from '@/hooks/useMe';
@@ -82,7 +83,24 @@ export function MyListPage() {
 
       <main className="mx-auto max-w-6xl px-4">
         {isSeriesLoading ? (
-          <p className="mt-10 text-center text-sm text-neutral-500">Carregando séries…</p>
+          <div className="flex flex-col gap-6">
+            <div className="flex gap-4 rounded-2xl border border-surface-border bg-surface-raised p-4">
+              <Skeleton className="aspect-2/3 w-20 shrink-0" />
+              <div className="flex min-w-0 flex-1 flex-col justify-center gap-2">
+                <Skeleton className="h-3 w-32" />
+                <Skeleton className="h-5 w-40" />
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="mt-1 h-1.5 w-full max-w-52" />
+              </div>
+              <Skeleton className="h-10 w-10 shrink-0 self-center rounded-full" />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+              {Array.from({ length: 12 }).map((_, index) => (
+                <Skeleton key={index} className="aspect-2/3 w-full rounded-xl" />
+              ))}
+            </div>
+          </div>
         ) : series && series.length > 0 ? (
           <div className="flex flex-col gap-6">
             {continueWatching && (
