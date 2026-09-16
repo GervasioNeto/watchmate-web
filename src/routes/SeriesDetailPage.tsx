@@ -110,7 +110,9 @@ export function SeriesDetailPage() {
   const backdropUrl = tmdbBackdropUrl(series.backdropPath);
   const year = series.primeiraExibicaoEm ? new Date(series.primeiraExibicaoEm).getFullYear() : null;
   const statusLabel = series.status ? (STATUS_LABELS[series.status] ?? series.status) : null;
-  const showOriginalName = series.nomeOriginal && series.nomeOriginal !== series.nome;
+  const subtitleParts = [series.englishName, series.nomeOriginal].filter(
+    (value, index, all): value is string => !!value && value !== series.nome && all.indexOf(value) === index,
+  );
 
   return (
     <div className="min-h-svh pb-16">
@@ -147,8 +149,8 @@ export function SeriesDetailPage() {
             <h1 className="truncate font-heading text-xl font-semibold text-white">
               {series.nome}
             </h1>
-            {showOriginalName && (
-              <p className="truncate text-xs text-neutral-500">{series.nomeOriginal}</p>
+            {subtitleParts.length > 0 && (
+              <p className="truncate text-xs text-neutral-500">{subtitleParts.join(' · ')}</p>
             )}
           </div>
         </div>

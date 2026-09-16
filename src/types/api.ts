@@ -64,6 +64,7 @@ export interface TrackedSeries {
   primeiraExibicaoEm: string | null;
   idiomaOriginal: string | null;
   nomeOriginal: string | null;
+  englishName: string | null;
 }
 
 export interface EpisodeProgress {
@@ -80,6 +81,7 @@ export interface SeriesSearchResult {
   name: string;
   posterPath: string | null;
   firstAirYear: number | null;
+  englishName: string | null;
 }
 
 export interface SeasonEpisode {

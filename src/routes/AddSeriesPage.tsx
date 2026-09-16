@@ -78,6 +78,9 @@ export function AddSeriesPage() {
                       <p className="truncate font-heading text-sm font-semibold text-white">
                         {result.name}
                       </p>
+                      {result.englishName && result.englishName !== result.name && (
+                        <p className="truncate text-xs text-neutral-500">{result.englishName}</p>
+                      )}
                       {result.firstAirYear && (
                         <p className="text-xs text-neutral-400">{result.firstAirYear}</p>
                       )}
