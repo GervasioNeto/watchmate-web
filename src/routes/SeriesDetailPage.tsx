@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/Button';
 import { EpisodeCard } from '@/components/EpisodeCard';
 import { GenrePills } from '@/components/GenrePills';
+import { Skeleton } from '@/components/Skeleton';
 import { StatusLabel } from '@/components/StatusLabel';
 import { useEpisodeProgress, useMarkEpisode } from '@/hooks/useEpisodeProgress';
 import { useMe } from '@/hooks/useMe';
@@ -24,7 +25,7 @@ export function SeriesDetailPage() {
   const { seriesId = '' } = useParams<{ seriesId: string }>();
   const navigate = useNavigate();
 
-  const { data: allSeries } = useSeries();
+  const { data: allSeries, isLoading: isSeriesListLoading } = useSeries();
   const series = allSeries?.find((item) => item.id === seriesId);
 
   const { data: me } = useMe();
@@ -61,6 +62,52 @@ export function SeriesDetailPage() {
     deleteSeries.mutate(series.id, {
       onSuccess: () => navigate('/my-list'),
     });
+  }
+
+  if (isSeriesListLoading) {
+    return (
+      <div className="min-h-svh pb-16">
+        <div className="mx-auto max-w-3xl">
+          <Skeleton className="aspect-video max-h-96 w-full rounded-none" />
+
+          <div className="mt-4 flex gap-4 px-4">
+            <Skeleton className="aspect-2/3 w-24 shrink-0 rounded-xl" />
+            <div className="flex flex-1 flex-col justify-end gap-2 pb-1">
+              <Skeleton className="h-5 w-3/4" />
+              <Skeleton className="h-3 w-1/2" />
+            </div>
+          </div>
+
+          <div className="mt-4 flex gap-2 px-4">
+            <Skeleton className="h-4 w-14" />
+            <Skeleton className="h-4 w-20" />
+          </div>
+
+          <div className="mt-3 flex gap-2 px-4">
+            <Skeleton className="h-6 w-16 rounded-full" />
+            <Skeleton className="h-6 w-20 rounded-full" />
+          </div>
+
+          <div className="mt-3 flex flex-col gap-2 px-4">
+            <Skeleton className="h-3 w-full" />
+            <Skeleton className="h-3 w-full" />
+            <Skeleton className="h-3 w-2/3" />
+          </div>
+
+          <div className="mx-4 mt-5 rounded-2xl border border-surface-border bg-surface-raised p-4">
+            <Skeleton className="h-3 w-40" />
+            <Skeleton className="mt-3 h-1.5 w-full" />
+            <Skeleton className="mt-3 h-10 w-44 rounded-xl" />
+          </div>
+
+          <div className="mt-6 flex flex-col gap-3 px-4">
+            {[0, 1, 2].map((index) => (
+              <Skeleton key={index} className="h-24 w-full rounded-2xl" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (!series) {
