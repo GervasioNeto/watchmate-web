@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/Button';
 import { EpisodeCard } from '@/components/EpisodeCard';
+import { GenrePills } from '@/components/GenrePills';
+import { StatusLabel } from '@/components/StatusLabel';
 import { useEpisodeProgress, useMarkEpisode } from '@/hooks/useEpisodeProgress';
-import { useGroup } from '@/hooks/useGroup';
 import { useMe } from '@/hooks/useMe';
 import { useSeasonEpisodes } from '@/hooks/useSeasonEpisodes';
 import { useDeleteSeries, useSeries } from '@/hooks/useSeries';
@@ -17,22 +18,7 @@ import {
 } from '@/lib/progress';
 import { tmdbBackdropUrl, tmdbPosterUrl } from '@/lib/tmdb';
 import type { EpisodeProgress } from '@/types/api';
-
-const STATUS_LABELS: Record<string, string> = {
-  'Returning Series': 'Em exibição',
-  Ended: 'Finalizada',
-  Canceled: 'Cancelada',
-  'In Production': 'Em produção',
-  Planned: 'Planejada',
-  Pilot: 'Piloto',
-};
-
-const GENRE_ACCENTS = [
-  'border-ultramarine/40 bg-ultramarine/10 text-ultramarine',
-  'border-raspberry/40 bg-raspberry/10 text-raspberry',
-  'border-amber/40 bg-amber/10 text-amber',
-  'border-flame/40 bg-flame/10 text-flame',
-];
+import { BackButton } from '@/components/BackButton';
 
 export function SeriesDetailPage() {
   const { seriesId = '' } = useParams<{ seriesId: string }>();
@@ -42,7 +28,6 @@ export function SeriesDetailPage() {
   const series = allSeries?.find((item) => item.id === seriesId);
 
   const { data: me } = useMe();
-  const { data: group } = useGroup();
   const { data: progress = [], isLoading: isProgressLoading } = useEpisodeProgress(seriesId);
   const markEpisode = useMarkEpisode(seriesId);
   const deleteSeries = useDeleteSeries();
@@ -59,12 +44,14 @@ export function SeriesDetailPage() {
 
   const [manualEpisode, setManualEpisode] = useState('');
 
-  const partnerId = group?.membros.find((member) => member.usuarioId !== me?.id)?.usuarioId;
+  const partner = me?.membroDoGrupo?.grupo.membros.find((member) => member.usuario.id !== me?.id);
 
   function markedByLabel(marcadoPor: string | null) {
     if (!marcadoPor) return null;
     if (marcadoPor === me?.id) return 'marcado por Você';
-    if (marcadoPor === partnerId) return 'marcado por seu par';
+    if (partner && marcadoPor === partner.usuario.id) {
+      return `marcado por ${partner.usuario.nome ?? partner.usuario.email}`;
+    }
     return null;
   }
 
@@ -109,9 +96,9 @@ export function SeriesDetailPage() {
   const posterUrl = tmdbPosterUrl(series.posterPath, 'w342');
   const backdropUrl = tmdbBackdropUrl(series.backdropPath);
   const year = series.primeiraExibicaoEm ? new Date(series.primeiraExibicaoEm).getFullYear() : null;
-  const statusLabel = series.status ? (STATUS_LABELS[series.status] ?? series.status) : null;
   const subtitleParts = [series.englishName, series.nomeOriginal].filter(
-    (value, index, all): value is string => !!value && value !== series.nome && all.indexOf(value) === index,
+    (value, index, all): value is string =>
+      !!value && value !== series.nome && all.indexOf(value) === index,
   );
 
   return (
@@ -119,21 +106,10 @@ export function SeriesDetailPage() {
       <div className="mx-auto max-w-3xl">
         <div className="relative">
           <div className="relative aspect-video max-h-96 w-full overflow-hidden bg-surface-raised">
-            {backdropUrl && (
-              <img src={backdropUrl} alt="" className="h-full w-full object-cover" />
-            )}
+            {backdropUrl && <img src={backdropUrl} alt="" className="h-full w-full object-cover" />}
             <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/30 to-transparent" />
           </div>
-
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            aria-label="Voltar"
-            className="absolute top-4 left-4 flex h-9 w-9 items-center justify-center rounded-full bg-surface/70 text-lg text-white backdrop-blur"
-          >
-            ←
-          </button>
-
+          <BackButton className="absolute top-4 left-4 bg-surface/70 backdrop-blur" />
           {series.notaMedia != null && (
             <div className="absolute top-4 right-4 flex items-center gap-1 rounded-full bg-surface/70 px-3 py-1 text-sm font-semibold text-amber backdrop-blur">
               ★ {series.notaMedia.toFixed(1)}
@@ -155,26 +131,21 @@ export function SeriesDetailPage() {
           </div>
         </div>
 
-        {(year || statusLabel) && (
+        {(year || series.status) && (
           <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 px-4 text-xs text-neutral-400">
             {year && <span>{year}</span>}
-            {year && statusLabel && <span>·</span>}
-            {statusLabel && <span>{statusLabel}</span>}
+            {year && series.status && <span>·</span>}
+            {series.status && (
+              <span>
+                <StatusLabel status={series.status} />
+              </span>
+            )}
           </div>
         )}
 
-        {series.generos && series.generos.length > 0 && (
-          <div className="mt-3 flex gap-2 overflow-x-auto px-4 pb-1">
-            {series.generos.map((genero, index) => (
-              <span
-                key={genero}
-                className={`shrink-0 rounded-full border px-3 py-1 text-xs ${
-                  GENRE_ACCENTS[index % GENRE_ACCENTS.length]
-                }`}
-              >
-                {genero}
-              </span>
-            ))}
+        {series.generos && (
+          <div className="mt-3 px-4">
+            <GenrePills genres={series.generos} />
           </div>
         )}
 
@@ -262,7 +233,9 @@ export function SeriesDetailPage() {
               ))}
             </ul>
           ) : episodeNumbers.length === 0 ? (
-            <p className="text-sm text-neutral-500">Nenhum episódio marcado nessa temporada ainda.</p>
+            <p className="text-sm text-neutral-500">
+              Nenhum episódio marcado nessa temporada ainda.
+            </p>
           ) : (
             <ul className="flex flex-col gap-2">
               {episodeNumbers.map((episodeNumber) => {
@@ -294,7 +267,9 @@ export function SeriesDetailPage() {
                           : `Marcar episódio ${episodeNumber} como assistido`
                       }
                       className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
-                        watched ? 'border-flame bg-flame text-white' : 'border-surface-border text-transparent'
+                        watched
+                          ? 'border-flame bg-flame text-white'
+                          : 'border-surface-border text-transparent'
                       }`}
                     >
                       ✓
@@ -313,7 +288,11 @@ export function SeriesDetailPage() {
                 event.preventDefault();
                 const episodeNumber = Number(manualEpisode);
                 if (Number.isInteger(episodeNumber) && episodeNumber > 0) {
-                  markEpisode.mutate({ season: selectedSeason, episode: episodeNumber, watched: true });
+                  markEpisode.mutate({
+                    season: selectedSeason,
+                    episode: episodeNumber,
+                    watched: true,
+                  });
                   setManualEpisode('');
                 }
               }}
