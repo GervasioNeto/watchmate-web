@@ -218,6 +218,8 @@ export function SeriesDetailPage() {
               {seasonEpisodes.map((episode) => (
                 <EpisodeCard
                   key={episode.numero}
+                  seriesId={seriesId}
+                  season={selectedSeason}
                   episode={episode}
                   progress={seasonProgressMap.get(episode.numero)}
                   markedByLabel={markedByLabel}
