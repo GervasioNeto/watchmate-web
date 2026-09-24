@@ -6,6 +6,7 @@ import { useAddSeries } from '@/hooks/useSeries';
 import { useSearchSeries } from '@/hooks/useSearchSeries';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import type { SeriesSearchResult } from '@/types/api';
+import { BackButton } from '@/components/BackButton';
 
 export function AddSeriesPage() {
   const navigate = useNavigate();
@@ -22,8 +23,7 @@ export function AddSeriesPage() {
       await addSeries.mutateAsync(result.tmdbId);
       navigate('/my-list');
     } catch (err) {
-      const message =
-        err instanceof ApiError ? err.message : 'Não foi possível adicionar a série.';
+      const message = err instanceof ApiError ? err.message : 'Não foi possível adicionar a série.';
       setFeedback({ tmdbId: result.tmdbId, message });
     }
   }
@@ -31,14 +31,7 @@ export function AddSeriesPage() {
   return (
     <div className="min-h-svh">
       <header className="flex items-center gap-3 border-b border-surface-border px-4 py-4">
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          aria-label="Voltar"
-          className="text-xl text-neutral-400"
-        >
-          ←
-        </button>
+        <BackButton />
         <input
           type="search"
           autoFocus

@@ -53,6 +53,7 @@ export interface TrackedSeries {
   nome: string;
   posterPath: string | null;
   adicionadoEm: string;
+  adicionadoPor: string | null;
   // Snapshot do TMDB no momento em que a série foi adicionada — não
   // atualiza sozinho se a série ganhar uma temporada nova depois.
   temporadas: SeasonSnapshot[];
@@ -91,4 +92,22 @@ export interface SeasonEpisode {
   dataExibicao: string | null;
   duracaoMinutos: number | null;
   imagem: string | null;
+}
+
+export interface EpisodeUser {
+  id: string;
+  nome: string | null;
+}
+
+export interface EpisodeReaction {
+  emoji: string;
+  usuario: EpisodeUser;
+  atualizadoEm: string;
+}
+
+export interface EpisodeComment {
+  id: string;
+  texto: string;
+  usuario: EpisodeUser;
+  criadoEm: string;
 }

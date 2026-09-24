@@ -45,8 +45,11 @@ export function MyListPage() {
     return <Navigate to="/onboarding" replace />;
   }
 
-  const partner = group?.membros.find((member) => member.usuarioId !== me?.id);
+  const partner = me?.membroDoGrupo?.grupo.membros.find((member) => member.usuario.id !== me?.id);
   const meLetter = (me?.nome ?? me?.email ?? 'V')[0]?.toUpperCase() ?? 'V';
+  const partnerLetter = partner
+    ? ((partner.usuario.nome ?? partner.usuario.email)[0]?.toUpperCase() ?? '♥')
+    : null;
   const restOfSeries = series?.filter((item) => item.id !== continueWatching?.item.id) ?? [];
 
   return (
@@ -65,7 +68,7 @@ export function MyListPage() {
                 : 'border-2 border-dashed border-surface-border bg-surface text-neutral-500'
             }`}
           >
-            {partner ? '♥' : '?'}
+            {partnerLetter ?? '♥'}
           </div>
         </div>
       </div>

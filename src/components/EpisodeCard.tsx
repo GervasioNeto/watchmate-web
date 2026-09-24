@@ -1,8 +1,13 @@
 import { useState } from 'react';
+import { Circle, CircleCheck } from 'lucide-react';
+import { EpisodeComments } from '@/components/EpisodeComments';
+import { EpisodeReactions } from '@/components/EpisodeReactions';
 import { tmdbStillUrl } from '@/lib/tmdb';
 import type { EpisodeProgress, SeasonEpisode } from '@/types/api';
 
 interface EpisodeCardProps {
+  seriesId: string;
+  season: number;
   episode: SeasonEpisode;
   progress: EpisodeProgress | undefined;
   markedByLabel: (marcadoPor: string | null) => string | null;
@@ -11,6 +16,8 @@ interface EpisodeCardProps {
 }
 
 export function EpisodeCard({
+  seriesId,
+  season,
   episode,
   progress,
   markedByLabel,
@@ -72,30 +79,49 @@ export function EpisodeCard({
               ? `Desmarcar episódio ${episode.numero}`
               : `Marcar episódio ${episode.numero} como assistido`
           }
-          className={`flex h-8 w-8 shrink-0 items-center justify-center self-center rounded-full border-2 transition-colors ${
-            watched ? 'border-flame bg-flame text-white' : 'border-surface-border text-transparent'
-          } disabled:opacity-50`}
+          className="flex shrink-0 items-center self-center p-1 transition-colors disabled:opacity-50"
         >
-          ✓
+          {watched ? (
+            <CircleCheck size={22} className="text-flame" />
+          ) : (
+            <Circle size={22} className="text-neutral-600 hover:text-neutral-400" />
+          )}
         </button>
       </div>
 
-      {episode.resumo && (
-        <div className="border-t border-surface-border px-3 py-2.5">
+      <div className="border-t border-surface-border px-3 py-2.5">
+        {episode.resumo && (
           <p
             className={`text-xs leading-relaxed text-neutral-400 ${expanded ? '' : 'line-clamp-2'}`}
           >
             {episode.resumo}
           </p>
-          <button
-            type="button"
-            onClick={() => setExpanded((value) => !value)}
-            className="mt-1.5 text-xs font-semibold text-flame hover:text-flame/80"
-          >
-            {expanded ? 'Recolher' : 'Ver mais'}
-          </button>
-        </div>
-      )}
+        )}
+        <button
+          type="button"
+          onClick={() => setExpanded((value) => !value)}
+          className="mt-1.5 text-xs font-semibold text-flame hover:text-flame/80"
+        >
+          {expanded ? 'Recolher' : 'Reações e comentários'}
+        </button>
+
+        {expanded && (
+          <div className="mt-3 flex flex-col gap-3 border-t border-surface-border pt-3">
+            <EpisodeReactions
+              seriesId={seriesId}
+              season={season}
+              episode={episode.numero}
+              enabled={expanded}
+            />
+            <EpisodeComments
+              seriesId={seriesId}
+              season={season}
+              episode={episode.numero}
+              enabled={expanded}
+            />
+          </div>
+        )}
+      </div>
     </li>
   );
 }
