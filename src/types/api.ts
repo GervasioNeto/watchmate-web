@@ -93,3 +93,21 @@ export interface SeasonEpisode {
   duracaoMinutos: number | null;
   imagem: string | null;
 }
+
+export interface EpisodeUser {
+  id: string;
+  nome: string | null;
+}
+
+export interface EpisodeReaction {
+  emoji: string;
+  usuario: EpisodeUser;
+  atualizadoEm: string;
+}
+
+export interface EpisodeComment {
+  id: string;
+  texto: string;
+  usuario: EpisodeUser;
+  criadoEm: string;
+}

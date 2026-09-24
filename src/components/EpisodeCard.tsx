@@ -1,9 +1,13 @@
 import { useState } from 'react';
 import { Circle, CircleCheck } from 'lucide-react';
+import { EpisodeComments } from '@/components/EpisodeComments';
+import { EpisodeReactions } from '@/components/EpisodeReactions';
 import { tmdbStillUrl } from '@/lib/tmdb';
 import type { EpisodeProgress, SeasonEpisode } from '@/types/api';
 
 interface EpisodeCardProps {
+  seriesId: string;
+  season: number;
   episode: SeasonEpisode;
   progress: EpisodeProgress | undefined;
   markedByLabel: (marcadoPor: string | null) => string | null;
@@ -12,6 +16,8 @@ interface EpisodeCardProps {
 }
 
 export function EpisodeCard({
+  seriesId,
+  season,
   episode,
   progress,
   markedByLabel,
@@ -83,22 +89,39 @@ export function EpisodeCard({
         </button>
       </div>
 
-      {episode.resumo && (
-        <div className="border-t border-surface-border px-3 py-2.5">
+      <div className="border-t border-surface-border px-3 py-2.5">
+        {episode.resumo && (
           <p
             className={`text-xs leading-relaxed text-neutral-400 ${expanded ? '' : 'line-clamp-2'}`}
           >
             {episode.resumo}
           </p>
-          <button
-            type="button"
-            onClick={() => setExpanded((value) => !value)}
-            className="mt-1.5 text-xs font-semibold text-flame hover:text-flame/80"
-          >
-            {expanded ? 'Recolher' : 'Ver mais'}
-          </button>
-        </div>
-      )}
+        )}
+        <button
+          type="button"
+          onClick={() => setExpanded((value) => !value)}
+          className="mt-1.5 text-xs font-semibold text-flame hover:text-flame/80"
+        >
+          {expanded ? 'Recolher' : 'Reações e comentários'}
+        </button>
+
+        {expanded && (
+          <div className="mt-3 flex flex-col gap-3 border-t border-surface-border pt-3">
+            <EpisodeReactions
+              seriesId={seriesId}
+              season={season}
+              episode={episode.numero}
+              enabled={expanded}
+            />
+            <EpisodeComments
+              seriesId={seriesId}
+              season={season}
+              episode={episode.numero}
+              enabled={expanded}
+            />
+          </div>
+        )}
+      </div>
     </li>
   );
 }
