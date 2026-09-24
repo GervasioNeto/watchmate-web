@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Circle, CircleCheck } from 'lucide-react';
 import { tmdbStillUrl } from '@/lib/tmdb';
 import type { EpisodeProgress, SeasonEpisode } from '@/types/api';
 
@@ -72,11 +73,13 @@ export function EpisodeCard({
               ? `Desmarcar episódio ${episode.numero}`
               : `Marcar episódio ${episode.numero} como assistido`
           }
-          className={`flex h-8 w-8 shrink-0 items-center justify-center self-center rounded-full border-2 transition-colors ${
-            watched ? 'border-flame bg-flame text-white' : 'border-surface-border text-transparent'
-          } disabled:opacity-50`}
+          className="flex shrink-0 items-center self-center p-1 transition-colors disabled:opacity-50"
         >
-          ✓
+          {watched ? (
+            <CircleCheck size={22} className="text-flame" />
+          ) : (
+            <Circle size={22} className="text-neutral-600 hover:text-neutral-400" />
+          )}
         </button>
       </div>
 
