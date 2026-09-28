@@ -14,6 +14,7 @@ interface GoogleSignInButtonProps {
 
 export function GoogleSignInButton({ onError }: GoogleSignInButtonProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const lastWidthRef = useRef<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -49,10 +50,16 @@ export function GoogleSignInButton({ onError }: GoogleSignInButtonProps) {
         },
       });
 
+      // A largura do botão do Google é um valor fixo em px, não responsivo — medimos
+      // o container pra ele nunca ficar maior que a tela (limites 200-400 documentados
+      // pelo Google Identity Services).
+      const width = Math.min(400, Math.max(200, containerRef.current.offsetWidth));
+      lastWidthRef.current = width;
+
       window.google.accounts.id.renderButton(containerRef.current, {
         theme: 'outline',
         size: 'large',
-        width: '320',
+        width: String(width),
         text: 'continue_with',
         locale: 'pt-BR',
       });
@@ -67,10 +74,22 @@ export function GoogleSignInButton({ onError }: GoogleSignInButtonProps) {
       script?.addEventListener('load', () => void render(), { once: true });
     }
 
+    // Reobserva só a largura real do container (não o iframe do botão em si,
+    // pra não entrar num loop de resize causado pelo próprio render).
+    const container = containerRef.current;
+    const resizeObserver = new ResizeObserver((entries) => {
+      const newWidth = Math.round(entries[0].contentRect.width);
+      if (newWidth === 0 || newWidth === lastWidthRef.current) return;
+      container?.replaceChildren();
+      void render();
+    });
+    if (container) resizeObserver.observe(container);
+
     return () => {
       cancelled = true;
+      resizeObserver.disconnect();
     };
   }, [onError]);
 
-  return <div ref={containerRef} className="flex justify-center" />;
+  return <div ref={containerRef} className="flex w-full justify-center" />;
 }
