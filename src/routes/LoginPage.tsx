@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Button } from '@/components/Button';
+import { GoogleSignInButton } from '@/components/GoogleSignInButton';
 import { Wordmark } from '@/components/Wordmark';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -78,6 +79,18 @@ export function LoginPage() {
           </button>
         </div>
 
+        <div className="mb-4">
+          <GoogleSignInButton onError={setError} />
+        </div>
+
+        <div className="mb-4 flex items-center gap-3 text-xs uppercase tracking-wide text-neutral-500">
+          <div className="h-px flex-1 bg-surface-border" />
+          ou
+          <div className="h-px flex-1 bg-surface-border" />
+        </div>
+
+        {error && <p className="mb-4 text-sm text-fuchsia">{error}</p>}
+
         {signupSuccess ? (
           <p className="text-center text-sm text-neutral-300">
             Conta criada! Verifique seu e-mail para confirmar o cadastro antes de entrar.
@@ -108,8 +121,6 @@ export function LoginPage() {
                 className="rounded-lg border border-surface-border bg-surface px-3 py-2.5 text-white outline-none focus:border-flame"
               />
             </label>
-
-            {error && <p className="text-sm text-fuchsia">{error}</p>}
 
             <Button type="submit" isLoading={isSubmitting} className="mt-2 w-full">
               {mode === 'login' ? 'Entrar' : 'Criar conta'}
