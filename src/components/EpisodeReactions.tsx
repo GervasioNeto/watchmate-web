@@ -1,7 +1,8 @@
 import { useEpisodeReactions, useSetEpisodeReaction } from '@/hooks/useEpisodeReactions';
 import { useMe } from '@/hooks/useMe';
+import { getReactionSummary } from '@/lib/reactionSummary';
 
-const REACTION_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🔥'];
+const REACTION_EMOJIS = ['❤️', '😂', '😐', '😮', '😢', '🔥'];
 
 interface EpisodeReactionsProps {
   seriesId: string;
@@ -21,9 +22,11 @@ export function EpisodeReactions({ seriesId, season, episode, enabled }: Episode
   );
 
   const myReaction = reactions.find((entry) => entry.usuario.id === me?.id);
+  const summary = me ? getReactionSummary(reactions, me.id) : null;
 
   return (
     <div className="flex flex-col gap-2">
+      {summary && <p className="text-sm text-neutral-300">{summary}</p>}
       <div className="flex w-fit gap-1 rounded-full bg-surface p-1">
         {REACTION_EMOJIS.map((emoji) => (
           <button

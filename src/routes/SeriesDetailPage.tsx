@@ -3,9 +3,14 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/Button';
 import { EpisodeCard } from '@/components/EpisodeCard';
 import { GenrePills } from '@/components/GenrePills';
+import { SeasonRetrospective } from '@/components/SeasonRetrospective';
 import { Skeleton } from '@/components/Skeleton';
 import { StatusLabel } from '@/components/StatusLabel';
-import { useEpisodeProgress, useMarkEpisode } from '@/hooks/useEpisodeProgress';
+import {
+  useEpisodeProgress,
+  useMarkEpisode,
+  useMarkSeasonWatched,
+} from '@/hooks/useEpisodeProgress';
 import { useMe } from '@/hooks/useMe';
 import { useSeasonEpisodes } from '@/hooks/useSeasonEpisodes';
 import { useDeleteSeries, useSeries } from '@/hooks/useSeries';
@@ -31,6 +36,7 @@ export function SeriesDetailPage() {
   const { data: me } = useMe();
   const { data: progress = [], isLoading: isProgressLoading } = useEpisodeProgress(seriesId);
   const markEpisode = useMarkEpisode(seriesId);
+  const markSeasonWatched = useMarkSeasonWatched(seriesId);
   const deleteSeries = useDeleteSeries();
 
   const current = getCurrentPosition(progress);
@@ -139,6 +145,11 @@ export function SeriesDetailPage() {
   const watchedInSeason = Array.from(seasonProgressMap.values()).filter(
     (entry) => entry.assistidoEm,
   ).length;
+  const isSeasonComplete = !!seasonTotal && watchedInSeason === seasonTotal;
+
+  const seasonNumbers = series.temporadas.map((temporada) => temporada.numero);
+  const maxSeason = seasonNumbers.length > 0 ? Math.max(...seasonNumbers) : 1;
+  const hasMultipleSeasons = seasonNumbers.length > 1;
 
   const posterUrl = tmdbPosterUrl(series.posterPath, 'w342');
   const backdropUrl = tmdbBackdropUrl(series.backdropPath);
@@ -234,28 +245,59 @@ export function SeriesDetailPage() {
           </Button>
         </div>
 
+        {isSeasonComplete && (
+          <SeasonRetrospective
+            seriesId={seriesId}
+            season={selectedSeason}
+            enabled={isSeasonComplete}
+          />
+        )}
+
         <div className="mt-6 px-4">
-          <div className="mb-3 flex items-center gap-3">
-            <span className="text-sm text-neutral-400">
-              Temporada{seasonTotal ? ` (${watchedInSeason}/${seasonTotal})` : ''}
-            </span>
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => setSeasonOverride(Math.max(1, selectedSeason - 1))}
-                className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-raised text-white"
-              >
-                –
-              </button>
-              <span className="w-8 text-center font-mono text-white">{selectedSeason}</span>
-              <button
-                type="button"
-                onClick={() => setSeasonOverride(selectedSeason + 1)}
-                className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-raised text-white"
-              >
-                +
-              </button>
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-neutral-400">
+                Temporada{seasonTotal ? ` (${watchedInSeason}/${seasonTotal})` : ''}
+              </span>
+              {hasMultipleSeasons && (
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setSeasonOverride(Math.max(1, selectedSeason - 1))}
+                    disabled={selectedSeason <= 1}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-raised text-white disabled:opacity-40"
+                  >
+                    –
+                  </button>
+                  <span className="w-8 text-center font-mono text-white">{selectedSeason}</span>
+                  <button
+                    type="button"
+                    onClick={() => setSeasonOverride(Math.min(maxSeason, selectedSeason + 1))}
+                    disabled={selectedSeason >= maxSeason}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-raised text-white disabled:opacity-40"
+                  >
+                    +
+                  </button>
+                </div>
+              )}
             </div>
+
+            {!!seasonTotal && (
+              <button
+                type="button"
+                onClick={() =>
+                  markSeasonWatched.mutate({ season: selectedSeason, watched: !isSeasonComplete })
+                }
+                disabled={markSeasonWatched.isPending}
+                className="shrink-0 text-xs font-semibold text-flame hover:text-flame/80 disabled:opacity-50"
+              >
+                {markSeasonWatched.isPending
+                  ? 'Aplicando…'
+                  : isSeasonComplete
+                    ? 'Desmarcar temporada'
+                    : 'Marcar temporada toda'}
+              </button>
+            )}
           </div>
 
           {isSeasonEpisodesLoading || isProgressLoading ? (
