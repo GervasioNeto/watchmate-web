@@ -18,6 +18,7 @@ declare global {
               width?: string;
               text?: 'signin_with' | 'signup_with' | 'continue_with' | 'signin';
               locale?: string;
+              shape?: 'pill';
             },
           ): void;
         };
