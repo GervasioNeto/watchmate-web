@@ -111,3 +111,15 @@ export interface EpisodeComment {
   usuario: EpisodeUser;
   criadoEm: string;
 }
+
+export interface SeasonReaction {
+  id: string;
+  serieAcompanhadaId: string;
+  temporada: number;
+  episodio: number;
+  usuarioId: string;
+  emoji: string;
+  criadoEm: string;
+  atualizadoEm: string;
+  usuario: EpisodeUser;
+}

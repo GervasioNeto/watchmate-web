@@ -48,3 +48,19 @@ export function useMarkEpisode(seriesId: string) {
     },
   });
 }
+
+export function useMarkSeasonWatched(seriesId: string) {
+  const queryClient = useQueryClient();
+  const queryKey = ['series', seriesId, 'progress'];
+
+  return useMutation({
+    mutationFn: ({ season, watched }: { season: number; watched: boolean }) =>
+      api.put<EpisodeProgress[]>(`/series/${seriesId}/seasons/${season}/watched`, { watched }),
+    onSuccess: (seasonProgress, variables) => {
+      queryClient.setQueryData<EpisodeProgress[]>(queryKey, (old) => {
+        const others = (old ?? []).filter((entry) => entry.temporada !== variables.season);
+        return [...others, ...seasonProgress];
+      });
+    },
+  });
+}

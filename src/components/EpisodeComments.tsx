@@ -27,12 +27,7 @@ function formatRelativeTime(iso: string) {
 
 export function EpisodeComments({ seriesId, season, episode, enabled }: EpisodeCommentsProps) {
   const { data: me } = useMe();
-  const { data: comments, isLoading } = useEpisodeComments(
-    seriesId,
-    season,
-    episode,
-    enabled,
-  );
+  const { data: comments, isLoading } = useEpisodeComments(seriesId, season, episode, enabled);
   const addComment = useAddEpisodeComment(seriesId, season, episode);
   const deleteComment = useDeleteEpisodeComment(seriesId, season, episode);
   const [text, setText] = useState('');
@@ -63,8 +58,10 @@ export function EpisodeComments({ seriesId, season, episode, enabled }: EpisodeC
         <ul className="flex flex-col">
           {comments.map((comment, index) => {
             const isMe = comment.usuario.id === me?.id;
-            const displayName = isMe ? 'Você' : (comment.usuario.nome ?? 'Seu par');
-            const letter = displayName[0]?.toUpperCase() ?? '?';
+            const displayName = isMe
+              ? (me?.nome ?? me?.email?.split('@')[0] ?? 'Você')
+              : (comment.usuario.nome ?? 'Seu par');
+            const letter = displayName.charAt(0).toUpperCase();
             return (
               <li
                 key={comment.id}
@@ -86,9 +83,7 @@ export function EpisodeComments({ seriesId, season, episode, enabled }: EpisodeC
                       · {formatRelativeTime(comment.criadoEm)}
                     </span>
                   </p>
-                  <p className="mt-0.5 text-xs leading-relaxed text-neutral-300">
-                    {comment.texto}
-                  </p>
+                  <p className="mt-0.5 text-xs leading-relaxed text-neutral-300">{comment.texto}</p>
                 </div>
                 {isMe && (
                   <button
