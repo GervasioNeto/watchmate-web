@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ApiError } from '@/lib/api';
+import { ApiError } from '@/api/client';
 import { tmdbPosterUrl } from '@/lib/tmdb';
 import { useAddSeries } from '@/hooks/useSeries';
 import { useSearchSeries } from '@/hooks/useSearchSeries';

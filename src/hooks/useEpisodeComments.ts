@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '@/lib/api';
-import type { EpisodeComment } from '@/types/api';
+import { episodeQueries } from '@/api/queries';
+import { episodeService } from '@/api/services/episodeService';
 
 export function useEpisodeComments(
   seriesId: string,
@@ -9,42 +9,32 @@ export function useEpisodeComments(
   enabled = true,
 ) {
   return useQuery({
-    queryKey: ['series', seriesId, 'season', season, 'episode', episode, 'comments'],
-    queryFn: () =>
-      api.get<EpisodeComment[]>(
-        `/series/${seriesId}/seasons/${season}/episodes/${episode}/comments`,
-      ),
+    ...episodeQueries.comments(seriesId, season, episode),
     enabled: enabled && !!seriesId && season > 0 && episode > 0,
   });
 }
 
 export function useAddEpisodeComment(seriesId: string, season: number, episode: number) {
   const queryClient = useQueryClient();
-  const queryKey = ['series', seriesId, 'season', season, 'episode', episode, 'comments'];
-
   return useMutation({
-    mutationFn: (texto: string) =>
-      api.post<EpisodeComment>(
-        `/series/${seriesId}/seasons/${season}/episodes/${episode}/comments`,
-        { texto },
-      ),
+    mutationFn: (texto: string) => episodeService.addComment(seriesId, season, episode, texto),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({
+        queryKey: episodeQueries.comments(seriesId, season, episode).queryKey,
+      });
     },
   });
 }
 
 export function useDeleteEpisodeComment(seriesId: string, season: number, episode: number) {
   const queryClient = useQueryClient();
-  const queryKey = ['series', seriesId, 'season', season, 'episode', episode, 'comments'];
-
   return useMutation({
     mutationFn: (commentId: string) =>
-      api.delete(
-        `/series/${seriesId}/seasons/${season}/episodes/${episode}/comments/${commentId}`,
-      ),
+      episodeService.deleteComment(seriesId, season, episode, commentId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({
+        queryKey: episodeQueries.comments(seriesId, season, episode).queryKey,
+      });
     },
   });
 }

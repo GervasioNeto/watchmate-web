@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Button } from '@/components/Button';
 import { Wordmark } from '@/components/Wordmark';
-import { ApiError } from '@/lib/api';
+import { ApiError } from '@/api/client';
 import { useCreateGroup, useGroup, useJoinGroup } from '@/hooks/useGroup';
 
 type Panel = 'choice' | 'join';

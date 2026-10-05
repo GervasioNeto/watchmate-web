@@ -1,11 +1,10 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '@/lib/api';
-import type { EpisodeProgress } from '@/types/api';
+import { seriesQueries } from '@/api/queries';
+import { progressService } from '@/api/services/progressService';
 
 export function useEpisodeProgress(seriesId: string) {
   return useQuery({
-    queryKey: ['series', seriesId, 'progress'],
-    queryFn: () => api.get<EpisodeProgress[]>(`/series/${seriesId}/progress`),
+    ...seriesQueries.progress(seriesId),
     enabled: !!seriesId,
   });
 }
@@ -13,8 +12,7 @@ export function useEpisodeProgress(seriesId: string) {
 export function useEpisodeProgressForSeries(seriesIds: string[]) {
   return useQueries({
     queries: seriesIds.map((seriesId) => ({
-      queryKey: ['series', seriesId, 'progress'],
-      queryFn: () => api.get<EpisodeProgress[]>(`/series/${seriesId}/progress`),
+      ...seriesQueries.progress(seriesId),
       enabled: !!seriesId,
     })),
   });
@@ -30,12 +28,9 @@ export function useMarkEpisode(seriesId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ season, episode, watched }: MarkEpisodeInput) =>
-      api.put<EpisodeProgress>(
-        `/series/${seriesId}/seasons/${season}/episodes/${episode}`,
-        { watched },
-      ),
+      progressService.markEpisode(seriesId, season, episode, watched),
     onSuccess: (updated) => {
-      queryClient.setQueryData<EpisodeProgress[]>(['series', seriesId, 'progress'], (old) => {
+      queryClient.setQueryData(seriesQueries.progress(seriesId).queryKey, (old) => {
         if (!old) return [updated];
         const index = old.findIndex(
           (entry) => entry.temporada === updated.temporada && entry.episodio === updated.episodio,
@@ -51,13 +46,11 @@ export function useMarkEpisode(seriesId: string) {
 
 export function useMarkSeasonWatched(seriesId: string) {
   const queryClient = useQueryClient();
-  const queryKey = ['series', seriesId, 'progress'];
-
   return useMutation({
     mutationFn: ({ season, watched }: { season: number; watched: boolean }) =>
-      api.put<EpisodeProgress[]>(`/series/${seriesId}/seasons/${season}/watched`, { watched }),
+      progressService.markSeason(seriesId, season, watched),
     onSuccess: (seasonProgress, variables) => {
-      queryClient.setQueryData<EpisodeProgress[]>(queryKey, (old) => {
+      queryClient.setQueryData(seriesQueries.progress(seriesId).queryKey, (old) => {
         const others = (old ?? []).filter((entry) => entry.temporada !== variables.season);
         return [...others, ...seasonProgress];
       });
