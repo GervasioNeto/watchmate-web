@@ -1,11 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api';
-import type { SeasonEpisode } from '@/types/api';
+import { seasonQueries } from '@/api/queries';
 
 export function useSeasonEpisodes(seriesId: string, season: number) {
   return useQuery({
-    queryKey: ['series', seriesId, 'season', season, 'episodes'],
-    queryFn: () => api.get<SeasonEpisode[]>(`/series/${seriesId}/seasons/${season}/episodes`),
+    ...seasonQueries.episodes(seriesId, season),
     enabled: !!seriesId && season > 0,
   });
 }

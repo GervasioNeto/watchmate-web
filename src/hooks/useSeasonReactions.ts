@@ -1,12 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api';
-import type { SeasonReaction } from '@/types/api';
+import { seasonQueries } from '@/api/queries';
 
 export function useSeasonReactions(seriesId: string, season: number, enabled = true) {
   return useQuery({
-    queryKey: ['series', seriesId, 'season', season, 'all-reactions'],
-    queryFn: () =>
-      api.get<SeasonReaction[]>(`/series/${seriesId}/seasons/${season}/reactions`),
+    ...seasonQueries.reactions(seriesId, season),
     enabled: enabled && !!seriesId && season > 0,
   });
 }

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import { episodeQueries } from '@/api/queries';
+import { episodeService } from '@/api/services/episodeService';
 import type { EpisodeReaction, EpisodeUser } from '@/types/api';
 
 export function useEpisodeReactions(
@@ -9,11 +10,7 @@ export function useEpisodeReactions(
   enabled = true,
 ) {
   return useQuery({
-    queryKey: ['series', seriesId, 'season', season, 'episode', episode, 'reactions'],
-    queryFn: () =>
-      api.get<EpisodeReaction[]>(
-        `/series/${seriesId}/seasons/${season}/episodes/${episode}/reactions`,
-      ),
+    ...episodeQueries.reactions(seriesId, season, episode),
     enabled: enabled && !!seriesId && season > 0 && episode > 0,
   });
 }
@@ -25,20 +22,16 @@ export function useSetEpisodeReaction(
   currentUser: EpisodeUser | undefined,
 ) {
   const queryClient = useQueryClient();
-  const queryKey = ['series', seriesId, 'season', season, 'episode', episode, 'reactions'];
+  const { queryKey } = episodeQueries.reactions(seriesId, season, episode);
 
   return useMutation({
-    mutationFn: (emoji: string) =>
-      api.put<EpisodeReaction>(
-        `/series/${seriesId}/seasons/${season}/episodes/${episode}/reaction`,
-        { emoji },
-      ),
+    mutationFn: (emoji: string) => episodeService.setReaction(seriesId, season, episode, emoji),
     onMutate: async (emoji) => {
       await queryClient.cancelQueries({ queryKey });
-      const previous = queryClient.getQueryData<EpisodeReaction[]>(queryKey);
+      const previous = queryClient.getQueryData(queryKey);
 
       if (currentUser) {
-        queryClient.setQueryData<EpisodeReaction[]>(queryKey, (old) => {
+        queryClient.setQueryData(queryKey, (old) => {
           const list = old ?? [];
           const optimistic: EpisodeReaction = {
             emoji,
