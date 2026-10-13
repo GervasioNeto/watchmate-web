@@ -1,20 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '@/lib/api';
-import type { TrackedSeries } from '@/types/api';
+import { seriesQueries } from '@/api/queries';
+import { seriesService } from '@/api/services/seriesService';
 
 export function useSeries() {
-  return useQuery({
-    queryKey: ['series'],
-    queryFn: () => api.get<TrackedSeries[]>('/series'),
-  });
+  return useQuery(seriesQueries.list());
 }
 
 export function useAddSeries() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (tmdbId: number) => api.post<TrackedSeries>('/series', { tmdbId }),
+    mutationFn: seriesService.add,
     onSuccess: (series) => {
-      queryClient.setQueryData<TrackedSeries[]>(['series'], (old) =>
+      queryClient.setQueryData(seriesQueries.list().queryKey, (old) =>
         old ? [series, ...old] : [series],
       );
     },
@@ -24,9 +21,9 @@ export function useAddSeries() {
 export function useDeleteSeries() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (seriesId: string) => api.delete(`/series/${seriesId}`),
+    mutationFn: seriesService.remove,
     onSuccess: (_data, seriesId) => {
-      queryClient.setQueryData<TrackedSeries[]>(['series'], (old) =>
+      queryClient.setQueryData(seriesQueries.list().queryKey, (old) =>
         old?.filter((item) => item.id !== seriesId),
       );
     },

@@ -1,50 +1,44 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api, ApiError } from '@/lib/api';
+import { groupQueries } from '@/api/queries';
+import { queryKeys } from '@/api/queryKeys';
+import { groupService } from '@/api/services/groupService';
 import type { Group } from '@/types/api';
 
 export function useGroup() {
-  return useQuery({
-    queryKey: ['group'],
-    queryFn: async () => {
-      try {
-        return await api.get<Group>('/groups/me');
-      } catch (err) {
-        if (err instanceof ApiError && err.status === 404) {
-          return null;
-        }
-        throw err;
-      }
-    },
-  });
+  return useQuery(groupQueries.mine());
+}
+
+function useSetGroupOnSuccess() {
+  const queryClient = useQueryClient();
+  return (group: Group) => {
+    queryClient.setQueryData(groupQueries.mine().queryKey, group);
+  };
 }
 
 export function useCreateGroup() {
-  const queryClient = useQueryClient();
+  const setGroup = useSetGroupOnSuccess();
   return useMutation({
-    mutationFn: () => api.post<Group>('/groups'),
-    onSuccess: (group) => {
-      queryClient.setQueryData(['group'], group);
-    },
+    mutationFn: groupService.create,
+    onSuccess: setGroup,
   });
 }
 
 export function useJoinGroup() {
-  const queryClient = useQueryClient();
+  const setGroup = useSetGroupOnSuccess();
   return useMutation({
-    mutationFn: (codigoConvite: string) => api.post<Group>('/groups/join', { codigoConvite }),
-    onSuccess: (group) => {
-      queryClient.setQueryData(['group'], group);
-    },
+    mutationFn: groupService.join,
+    onSuccess: setGroup,
   });
 }
 
 export function usePatchGroup() {
   const queryClient = useQueryClient();
+  const setGroup = useSetGroupOnSuccess();
   return useMutation({
-    mutationFn: (nome: string) => api.patch<Group>('/groups/me', { nome }),
+    mutationFn: groupService.updateName,
     onSuccess: (group) => {
-      queryClient.setQueryData(['group'], group);
-      queryClient.invalidateQueries({ queryKey: ['me'] });
+      setGroup(group);
+      queryClient.invalidateQueries({ queryKey: queryKeys.me() });
     },
   });
 }

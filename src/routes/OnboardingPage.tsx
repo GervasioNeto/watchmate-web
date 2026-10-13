@@ -1,8 +1,9 @@
 import { useState, type FormEvent } from 'react';
 import { Navigate } from 'react-router-dom';
-import { Button } from '@/components/Button';
+import { ApiError } from '@/api/client';
 import { Wordmark } from '@/components/Wordmark';
-import { ApiError } from '@/lib/api';
+import { Button } from '@/components/ui/Button';
+import { TextInput } from '@/components/ui/TextInput';
 import { useCreateGroup, useGroup, useJoinGroup } from '@/hooks/useGroup';
 
 type Panel = 'choice' | 'join';
@@ -39,82 +40,79 @@ export function OnboardingPage() {
     }
   }
 
+  function showPanel(next: Panel) {
+    setError(null);
+    setPanel(next);
+  }
+
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center px-6 py-12">
-      <div className="mb-8">
-        <Wordmark />
-      </div>
+    <div className="mx-auto flex min-h-svh max-w-sm flex-col justify-center gap-8 px-4 py-12">
+      <Wordmark className="h-10 self-start" />
 
-      <div className="w-full max-w-sm rounded-2xl border border-surface-border bg-surface-raised p-6">
-        {panel === 'choice' ? (
-          <div className="flex flex-col gap-4">
-            <div className="text-center">
-              <h1 className="font-heading text-xl font-semibold text-white">
-                Vamos formar a dupla
-              </h1>
-              <p className="mt-1 text-sm text-neutral-400">
-                Crie um grupo e convide seu par, ou entre com um código que já recebeu.
-              </p>
-            </div>
+      {panel === 'choice' ? (
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-1">
+            <h1 className="text-2xl font-extrabold tracking-tight">Agora, o seu par</h1>
+            <p className="text-sm text-fg-muted">
+              O WatchMate funciona em dupla. Crie o grupo e mande o código para a outra pessoa, ou
+              entre com um código que você recebeu.
+            </p>
+          </div>
 
-            {error && <p className="text-center text-sm text-fuchsia">{error}</p>}
+          {error && (
+            <p role="alert" className="text-sm text-danger">
+              {error}
+            </p>
+          )}
 
-            <Button onClick={handleCreate} isLoading={createGroup.isPending} className="w-full">
+          <div className="flex flex-col gap-2">
+            <Button onClick={handleCreate} isLoading={createGroup.isPending}>
               Criar grupo
             </Button>
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setError(null);
-                setPanel('join');
-              }}
-              className="w-full"
-            >
-              Entrar com código
+            <Button variant="secondary" onClick={() => showPanel('join')}>
+              Tenho um código
             </Button>
           </div>
-        ) : (
-          <form className="flex flex-col gap-4" onSubmit={handleJoin}>
-            <div className="text-center">
-              <h1 className="font-heading text-xl font-semibold text-white">
-                Entrar em um grupo
-              </h1>
-              <p className="mt-1 text-sm text-neutral-400">
-                Digite o código de convite que seu par compartilhou com você.
-              </p>
-            </div>
+        </div>
+      ) : (
+        <form className="flex flex-col gap-6" onSubmit={handleJoin}>
+          <div className="flex flex-col gap-1">
+            <h1 className="text-2xl font-extrabold tracking-tight">Entrar no grupo</h1>
+            <p className="text-sm text-fg-muted">Digite o código que seu par compartilhou.</p>
+          </div>
 
-            <label className="flex flex-col gap-1.5 text-sm text-neutral-300">
-              Código de convite
-              <input
-                type="text"
-                required
-                autoFocus
-                value={inviteCode}
-                onChange={(event) => setInviteCode(event.target.value)}
-                placeholder="Ex: 7K3PQD"
-                className="rounded-lg border border-surface-border bg-surface px-3 py-2.5 text-center font-mono text-lg uppercase tracking-widest text-white outline-none focus:border-flame"
-              />
-            </label>
+          <label className="flex flex-col gap-1.5 text-sm">
+            Código de convite
+            <TextInput
+              type="text"
+              required
+              autoFocus
+              autoCapitalize="characters"
+              autoComplete="off"
+              spellCheck={false}
+              value={inviteCode}
+              onChange={(event) => setInviteCode(event.target.value)}
+              placeholder="7K3PQD"
+              variant="code"
+            />
+          </label>
 
-            {error && <p className="text-sm text-fuchsia">{error}</p>}
+          {error && (
+            <p role="alert" className="text-sm text-danger">
+              {error}
+            </p>
+          )}
 
-            <Button type="submit" isLoading={joinGroup.isPending} className="w-full">
+          <div className="flex flex-col gap-2">
+            <Button type="submit" isLoading={joinGroup.isPending}>
               Entrar no grupo
             </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => {
-                setError(null);
-                setPanel('choice');
-              }}
-            >
+            <Button variant="ghost" onClick={() => showPanel('choice')}>
               Voltar
             </Button>
-          </form>
-        )}
-      </div>
+          </div>
+        </form>
+      )}
     </div>
   );
 }

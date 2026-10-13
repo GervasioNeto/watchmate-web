@@ -1,7 +1,13 @@
 // Field names mirror the API's JSON response shape (Portuguese, from the Prisma schema).
 // Type names are in English to follow this codebase's naming convention.
 
-export interface User {
+// Both null until the user picks an avatar — UI falls back to initials.
+export interface AvatarFields {
+  avatarEstilo: string | null;
+  avatarSemente: string | null;
+}
+
+export interface User extends AvatarFields {
   id: string;
   email: string;
   nome: string | null;
@@ -24,7 +30,9 @@ export interface Group {
 }
 
 export interface GroupMemberSummary {
-  usuario: {
+  // Ordem de entrada no grupo: define a cor fixa de cada pessoa (ver buildCouple).
+  entrouEm: string;
+  usuario: AvatarFields & {
     id: string;
     nome: string | null;
     email: string;
@@ -46,12 +54,20 @@ export interface SeasonSnapshot {
   totalEpisodios: number;
 }
 
+// Modo da série, ainda devolvido pela API. O app não usa mais: toda marcação diz
+// para quem vale (`ProgressScope`).
+export type WatchMode = 'JUNTOS' | 'SEPARADOS';
+
+// Para quem vale uma marcação: só você ou os dois.
+export type ProgressScope = 'me' | 'both';
+
 export interface TrackedSeries {
   id: string;
   grupoId: string;
   tmdbId: number;
   nome: string;
   posterPath: string | null;
+  modo: WatchMode;
   adicionadoEm: string;
   adicionadoPor: string | null;
   // Snapshot do TMDB no momento em que a série foi adicionada — não
@@ -68,13 +84,46 @@ export interface TrackedSeries {
   englishName: string | null;
 }
 
-export interface EpisodeProgress {
-  id: string;
-  serieAcompanhadaId: string;
+export interface EpisodePosition {
   temporada: number;
   episodio: number;
-  assistidoEm: string | null;
+}
+
+export interface MemberProgress {
+  usuarioId: string;
+  nome: string | null;
+  assistidos: number;
+  percentual: number | null;
+  posicaoAtual: EpisodePosition | null;
+  ultimoAssistidoEm: string | null;
+  // Episódios que esse membro viu e pelo menos um outro membro ainda não.
+  aFrente: number;
+}
+
+export interface EpisodeWatcher {
+  usuarioId: string;
+  assistidoEm: string;
+  // Marcado para o grupo todo de uma vez ("assistimos juntos").
+  juntos: boolean;
+  // Quem registrou: pode ser o parceiro, ao marcar para os dois.
   marcadoPor: string | null;
+}
+
+export interface EpisodeProgressEntry extends EpisodePosition {
+  assistidoPor: EpisodeWatcher[];
+}
+
+export interface SeriesProgress {
+  modo: WatchMode;
+  totalEpisodios: number;
+  membros: MemberProgress[];
+  // Episódios que todos os membros já viram.
+  emComum: {
+    assistidos: number;
+    percentual: number | null;
+    posicaoAtual: EpisodePosition | null;
+  };
+  episodios: EpisodeProgressEntry[];
 }
 
 export interface SeriesSearchResult {
@@ -99,15 +148,21 @@ export interface EpisodeUser {
   nome: string | null;
 }
 
-export interface EpisodeReaction {
-  emoji: string;
+// Conteúdo do parceiro em episódio que você ainda não viu vem com `oculto: true`
+// e sem o conteúdo — a API esconde para não dar spoiler.
+type Spoilerable<Field extends string> =
+  ({ oculto: false } & Record<Field, string>) | ({ oculto: true } & Record<Field, null>);
+
+interface EpisodeContentBase {
+  id: string;
+  serieAcompanhadaId: string;
+  temporada: number;
+  episodio: number;
+  usuarioId: string;
+  criadoEm: string;
   usuario: EpisodeUser;
-  atualizadoEm: string;
 }
 
-export interface EpisodeComment {
-  id: string;
-  texto: string;
-  usuario: EpisodeUser;
-  criadoEm: string;
-}
+export type EpisodeReaction = EpisodeContentBase & { atualizadoEm: string } & Spoilerable<'emoji'>;
+
+export type EpisodeComment = EpisodeContentBase & Spoilerable<'texto'>;

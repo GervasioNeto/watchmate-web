@@ -1,25 +1,35 @@
-import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Button } from '@/components/Button';
-import { EpisodeCard } from '@/components/EpisodeCard';
-import { GenrePills } from '@/components/GenrePills';
-import { Skeleton } from '@/components/Skeleton';
-import { StatusLabel } from '@/components/StatusLabel';
-import { useEpisodeProgress, useMarkEpisode } from '@/hooks/useEpisodeProgress';
-import { useMe } from '@/hooks/useMe';
-import { useSeasonEpisodes } from '@/hooks/useSeasonEpisodes';
-import { useDeleteSeries, useSeries } from '@/hooks/useSeries';
-import {
-  getCurrentPosition,
-  getNextEpisode,
-  getSeasonTotal,
-  getSeriesProgressPercent,
-  getSeriesTotalEpisodes,
-  getWatchedCount,
-} from '@/lib/progress';
-import { tmdbBackdropUrl, tmdbPosterUrl } from '@/lib/tmdb';
-import type { EpisodeProgress } from '@/types/api';
+import { Star } from 'lucide-react';
 import { BackButton } from '@/components/BackButton';
+import { EpisodesSection } from '@/components/episodes/EpisodesSection';
+import { SeriesProgressPanel } from '@/components/progress/SeriesProgressPanel';
+import { Synopsis } from '@/components/series/Synopsis';
+import { Button } from '@/components/ui/Button';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { useSeriesProgress } from '@/hooks/useSeriesProgress';
+import { useDeleteSeries, useSeries } from '@/hooks/useSeries';
+import { statusLabel } from '@/lib/seriesStatus';
+import { tmdbBackdropUrl, tmdbPosterUrl } from '@/lib/tmdb';
+
+function SeriesDetailSkeleton() {
+  return (
+    <div className="mx-auto max-w-3xl pb-16" aria-label="Carregando série">
+      <Skeleton className="aspect-video max-h-80 w-full" />
+      <div className="relative -mt-12 flex items-end gap-4 px-4">
+        <Skeleton className="aspect-2/3 w-24 shrink-0 rounded-md" />
+        <div className="flex flex-1 flex-col gap-2 pb-1">
+          <Skeleton className="h-6 w-3/4 rounded-sm" />
+          <Skeleton className="h-3 w-1/2 rounded-sm" />
+        </div>
+      </div>
+      <div className="mt-6 flex flex-col gap-2 px-4">
+        <Skeleton className="h-3 w-full rounded-sm" />
+        <Skeleton className="h-3 w-2/3 rounded-sm" />
+      </div>
+      <Skeleton className="mx-4 mt-6 h-48 rounded-lg" />
+    </div>
+  );
+}
 
 export function SeriesDetailPage() {
   const { seriesId = '' } = useParams<{ seriesId: string }>();
@@ -27,350 +37,116 @@ export function SeriesDetailPage() {
 
   const { data: allSeries, isLoading: isSeriesListLoading } = useSeries();
   const series = allSeries?.find((item) => item.id === seriesId);
-
-  const { data: me } = useMe();
-  const { data: progress = [], isLoading: isProgressLoading } = useEpisodeProgress(seriesId);
-  const markEpisode = useMarkEpisode(seriesId);
+  const progressQuery = useSeriesProgress(seriesId);
   const deleteSeries = useDeleteSeries();
 
-  const current = getCurrentPosition(progress);
-
-  const [seasonOverride, setSeasonOverride] = useState<number | null>(null);
-  const selectedSeason = seasonOverride ?? current?.season ?? 1;
-
-  const { data: seasonEpisodes, isLoading: isSeasonEpisodesLoading } = useSeasonEpisodes(
-    seriesId,
-    selectedSeason,
-  );
-
-  const [manualEpisode, setManualEpisode] = useState('');
-
-  const partner = me?.membroDoGrupo?.grupo.membros.find((member) => member.usuario.id !== me?.id);
-
-  function markedByLabel(marcadoPor: string | null) {
-    if (!marcadoPor) return null;
-    if (marcadoPor === me?.id) return 'marcado por Você';
-    if (partner && marcadoPor === partner.usuario.id) {
-      return `marcado por ${partner.usuario.nome ?? partner.usuario.email}`;
-    }
-    return null;
-  }
-
-  function handleDelete() {
-    if (!series) return;
-    if (!window.confirm(`Remover "${series.nome}" da lista? Isso apaga o progresso salvo.`)) return;
-    deleteSeries.mutate(series.id, {
-      onSuccess: () => navigate('/my-list'),
-    });
-  }
-
   if (isSeriesListLoading) {
-    return (
-      <div className="min-h-svh pb-16">
-        <div className="mx-auto max-w-3xl">
-          <Skeleton className="aspect-video max-h-96 w-full rounded-none" />
-
-          <div className="mt-4 flex gap-4 px-4">
-            <Skeleton className="aspect-2/3 w-24 shrink-0 rounded-xl" />
-            <div className="flex flex-1 flex-col justify-end gap-2 pb-1">
-              <Skeleton className="h-5 w-3/4" />
-              <Skeleton className="h-3 w-1/2" />
-            </div>
-          </div>
-
-          <div className="mt-4 flex gap-2 px-4">
-            <Skeleton className="h-4 w-14" />
-            <Skeleton className="h-4 w-20" />
-          </div>
-
-          <div className="mt-3 flex gap-2 px-4">
-            <Skeleton className="h-6 w-16 rounded-full" />
-            <Skeleton className="h-6 w-20 rounded-full" />
-          </div>
-
-          <div className="mt-3 flex flex-col gap-2 px-4">
-            <Skeleton className="h-3 w-full" />
-            <Skeleton className="h-3 w-full" />
-            <Skeleton className="h-3 w-2/3" />
-          </div>
-
-          <div className="mx-4 mt-5 rounded-2xl border border-surface-border bg-surface-raised p-4">
-            <Skeleton className="h-3 w-40" />
-            <Skeleton className="mt-3 h-1.5 w-full" />
-            <Skeleton className="mt-3 h-10 w-44 rounded-xl" />
-          </div>
-
-          <div className="mt-6 flex flex-col gap-3 px-4">
-            {[0, 1, 2].map((index) => (
-              <Skeleton key={index} className="h-24 w-full rounded-2xl" />
-            ))}
-          </div>
-        </div>
-      </div>
-    );
+    return <SeriesDetailSkeleton />;
   }
 
   if (!series) {
     return (
-      <div className="flex min-h-svh flex-col items-center justify-center gap-4 px-6 text-center">
-        <p className="text-sm text-neutral-400">Série não encontrada.</p>
-        <Button variant="secondary" onClick={() => navigate('/my-list')}>
-          Voltar pra Minha Lista
+      <div className="mx-auto flex min-h-svh max-w-sm flex-col justify-center gap-4 px-4">
+        <h1 className="text-xl font-bold">Série não encontrada</h1>
+        <p className="text-sm text-fg-muted">Ela pode ter sido removida da lista de vocês.</p>
+        <Button variant="secondary" onClick={() => navigate('/my-list')} className="self-start">
+          Voltar para a lista
         </Button>
       </div>
     );
   }
 
-  const next = getNextEpisode(progress, series.temporadas);
-  const currentSeasonTotal = current ? getSeasonTotal(series.temporadas, current.season) : null;
-  const seriesTotal = getSeriesTotalEpisodes(series.temporadas);
-  const watchedCount = getWatchedCount(progress);
-  const seriesPercent = getSeriesProgressPercent(progress, series.temporadas);
-
-  const seasonTotal = getSeasonTotal(series.temporadas, selectedSeason);
-  const seasonProgressMap = new Map<number, EpisodeProgress>(
-    progress
-      .filter((entry) => entry.temporada === selectedSeason)
-      .map((entry) => [entry.episodio, entry]),
-  );
-  const episodeNumbers = seasonTotal
-    ? Array.from({ length: seasonTotal }, (_, index) => index + 1)
-    : Array.from(seasonProgressMap.keys()).sort((a, b) => a - b);
-  const watchedInSeason = Array.from(seasonProgressMap.values()).filter(
-    (entry) => entry.assistidoEm,
-  ).length;
+  function handleDelete() {
+    if (!series) return;
+    if (!window.confirm(`Remover "${series.nome}" da lista? O progresso dos dois será apagado.`)) {
+      return;
+    }
+    deleteSeries.mutate(series.id, { onSuccess: () => navigate('/my-list') });
+  }
 
   const posterUrl = tmdbPosterUrl(series.posterPath, 'w342');
   const backdropUrl = tmdbBackdropUrl(series.backdropPath);
   const year = series.primeiraExibicaoEm ? new Date(series.primeiraExibicaoEm).getFullYear() : null;
-  const subtitleParts = [series.englishName, series.nomeOriginal].filter(
+  const altNames = [series.englishName, series.nomeOriginal].filter(
     (value, index, all): value is string =>
       !!value && value !== series.nome && all.indexOf(value) === index,
   );
+  const metaLine = [
+    year ? String(year) : null,
+    statusLabel(series.status),
+    series.generos.length > 0 ? series.generos.join(', ') : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
 
   return (
-    <div className="min-h-svh pb-16">
-      <div className="mx-auto max-w-3xl">
-        <div className="relative">
-          <div className="relative aspect-video max-h-96 w-full overflow-hidden bg-surface-raised">
-            {backdropUrl && <img src={backdropUrl} alt="" className="h-full w-full object-cover" />}
-            <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/30 to-transparent" />
-          </div>
-          <BackButton className="absolute top-4 left-4 bg-surface/70 backdrop-blur" />
-          {series.notaMedia != null && (
-            <div className="absolute top-4 right-4 flex items-center gap-1 rounded-full bg-surface/70 px-3 py-1 text-sm font-semibold text-amber backdrop-blur">
-              ★ {series.notaMedia.toFixed(1)}
-            </div>
+    <div className="mx-auto max-w-3xl pb-16">
+      <div className="relative">
+        <div className="relative aspect-video max-h-80 w-full overflow-hidden bg-surface">
+          {backdropUrl && <img src={backdropUrl} alt="" className="h-full w-full object-cover" />}
+          <div className="absolute inset-0 bg-linear-to-t from-canvas via-canvas/40 to-transparent" />
+        </div>
+        <BackButton className="absolute top-3 left-3 bg-scrim" />
+      </div>
+
+      <header className="relative -mt-12 flex items-end gap-4 px-4">
+        <div className="aspect-2/3 w-24 shrink-0 overflow-hidden rounded-md bg-surface ring-1 ring-line">
+          {posterUrl && <img src={posterUrl} alt="" className="h-full w-full object-cover" />}
+        </div>
+        <div className="flex min-w-0 flex-1 flex-col gap-1 pb-1">
+          <h1 className="text-2xl leading-tight font-extrabold tracking-tight text-balance">
+            {series.nome}
+          </h1>
+          {altNames.length > 0 && (
+            <p className="truncate text-sm text-fg-subtle">{altNames.join(' · ')}</p>
           )}
         </div>
+      </header>
 
-        <div className="relative -mt-14 flex gap-4 px-4">
-          <div className="aspect-2/3 w-24 shrink-0 overflow-hidden rounded-xl border-2 border-black bg-surface-raised shadow-lg">
-            {posterUrl && <img src={posterUrl} alt="" className="h-full w-full object-cover" />}
-          </div>
-          <div className="flex min-w-0 flex-1 flex-col justify-end pb-1">
-            <h1 className="truncate font-heading text-xl font-semibold text-white">
-              {series.nome}
-            </h1>
-            {subtitleParts.length > 0 && (
-              <p className="truncate text-xs text-neutral-500">{subtitleParts.join(' · ')}</p>
-            )}
-          </div>
-        </div>
-
-        {(year || series.status) && (
-          <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 px-4 text-xs text-neutral-400">
-            {year && <span>{year}</span>}
-            {year && series.status && <span>·</span>}
-            {series.status && (
-              <span>
-                <StatusLabel status={series.status} />
+      <div className="mt-4 flex flex-col gap-3 px-4">
+        {(series.notaMedia != null || metaLine) && (
+          <p className="text-sm text-fg-muted">
+            {series.notaMedia != null && (
+              <span className="mr-2 inline-flex items-center gap-1 align-[-2px] text-fg">
+                <Star size={14} aria-hidden className="fill-current" />
+                <span className="sr-only">Nota </span>
+                {series.notaMedia.toFixed(1)}
               </span>
             )}
-          </div>
-        )}
-
-        {series.generos && (
-          <div className="mt-3 px-4">
-            <GenrePills genres={series.generos} />
-          </div>
-        )}
-
-        {series.sinopse && (
-          <p className="mt-3 px-4 text-sm leading-relaxed text-neutral-300">{series.sinopse}</p>
-        )}
-
-        <div className="mx-4 mt-5 rounded-2xl border border-surface-border bg-surface-raised p-4">
-          <p className="text-sm text-neutral-400">
-            {current
-              ? `Vocês estão em T${current.season} · Ep ${current.episode}${
-                  currentSeasonTotal ? ` de ${currentSeasonTotal}` : ''
-                }`
-              : 'Vocês ainda não começaram'}
+            {metaLine}
           </p>
+        )}
 
-          {seriesTotal > 0 && (
-            <div className="mt-2">
-              <p className="text-xs text-neutral-500">
-                {watchedCount} de {seriesTotal} episódios · {seriesPercent}%
-              </p>
-              <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-surface">
-                <div
-                  className="h-full rounded-full bg-flame transition-all"
-                  style={{ width: `${seriesPercent ?? 0}%` }}
-                />
-              </div>
-            </div>
-          )}
+        {series.sinopse && <Synopsis text={series.sinopse} />}
+      </div>
 
+      <div className="mt-6 flex flex-col gap-8 px-4">
+        {progressQuery.data ? (
+          <>
+            <SeriesProgressPanel series={series} progress={progressQuery.data} />
+            <EpisodesSection series={series} progress={progressQuery.data} />
+          </>
+        ) : progressQuery.isError ? (
+          <div className="flex flex-col items-start gap-3 rounded-lg bg-surface p-4">
+            <p className="text-sm text-fg-muted">Não foi possível carregar o progresso.</p>
+            <Button variant="secondary" size="sm" onClick={() => progressQuery.refetch()}>
+              Tentar de novo
+            </Button>
+          </div>
+        ) : (
+          <Skeleton className="h-48 rounded-lg" />
+        )}
+
+        <div className="border-t border-line pt-4">
           <Button
-            onClick={() =>
-              markEpisode.mutate({ season: next.season, episode: next.episode, watched: true })
-            }
-            isLoading={markEpisode.isPending}
-            className="mt-3 w-full sm:w-auto"
+            variant="danger"
+            size="sm"
+            onClick={handleDelete}
+            isLoading={deleteSeries.isPending}
+            className="-ml-3"
           >
-            Marcar T{next.season} Ep{next.episode} como assistido
+            Remover da lista
           </Button>
-        </div>
-
-        <div className="mt-6 px-4">
-          <div className="mb-3 flex items-center gap-3">
-            <span className="text-sm text-neutral-400">
-              Temporada{seasonTotal ? ` (${watchedInSeason}/${seasonTotal})` : ''}
-            </span>
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => setSeasonOverride(Math.max(1, selectedSeason - 1))}
-                className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-raised text-white"
-              >
-                –
-              </button>
-              <span className="w-8 text-center font-mono text-white">{selectedSeason}</span>
-              <button
-                type="button"
-                onClick={() => setSeasonOverride(selectedSeason + 1)}
-                className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-raised text-white"
-              >
-                +
-              </button>
-            </div>
-          </div>
-
-          {isSeasonEpisodesLoading || isProgressLoading ? (
-            <p className="text-sm text-neutral-500">Carregando episódios…</p>
-          ) : seasonEpisodes && seasonEpisodes.length > 0 ? (
-            <ul className="flex flex-col gap-3">
-              {seasonEpisodes.map((episode) => (
-                <EpisodeCard
-                  key={episode.numero}
-                  seriesId={seriesId}
-                  season={selectedSeason}
-                  episode={episode}
-                  progress={seasonProgressMap.get(episode.numero)}
-                  markedByLabel={markedByLabel}
-                  isPending={markEpisode.isPending}
-                  onToggleWatched={() =>
-                    markEpisode.mutate({
-                      season: selectedSeason,
-                      episode: episode.numero,
-                      watched: !seasonProgressMap.get(episode.numero)?.assistidoEm,
-                    })
-                  }
-                />
-              ))}
-            </ul>
-          ) : episodeNumbers.length === 0 ? (
-            <p className="text-sm text-neutral-500">
-              Nenhum episódio marcado nessa temporada ainda.
-            </p>
-          ) : (
-            <ul className="flex flex-col gap-2">
-              {episodeNumbers.map((episodeNumber) => {
-                const entry = seasonProgressMap.get(episodeNumber);
-                const watched = !!entry?.assistidoEm;
-                const label = watched ? markedByLabel(entry!.marcadoPor) : null;
-                return (
-                  <li
-                    key={episodeNumber}
-                    className="flex items-center justify-between rounded-xl border border-surface-border bg-surface-raised px-4 py-3"
-                  >
-                    <div>
-                      <p className="font-mono text-sm text-white">Episódio {episodeNumber}</p>
-                      {label && <p className="text-xs text-neutral-500">{label}</p>}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        markEpisode.mutate({
-                          season: selectedSeason,
-                          episode: episodeNumber,
-                          watched: !watched,
-                        })
-                      }
-                      aria-pressed={watched}
-                      aria-label={
-                        watched
-                          ? `Desmarcar episódio ${episodeNumber}`
-                          : `Marcar episódio ${episodeNumber} como assistido`
-                      }
-                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
-                        watched
-                          ? 'border-flame bg-flame text-white'
-                          : 'border-surface-border text-transparent'
-                      }`}
-                    >
-                      ✓
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-
-          {/* Só existe quando não sabemos o total da temporada — se soubermos,
-              a lista acima já cobre todo número de episódio válido. */}
-          {!seasonTotal && (
-            <form
-              onSubmit={(event) => {
-                event.preventDefault();
-                const episodeNumber = Number(manualEpisode);
-                if (Number.isInteger(episodeNumber) && episodeNumber > 0) {
-                  markEpisode.mutate({
-                    season: selectedSeason,
-                    episode: episodeNumber,
-                    watched: true,
-                  });
-                  setManualEpisode('');
-                }
-              }}
-              className="mt-4 flex gap-2"
-            >
-              <input
-                type="number"
-                min={1}
-                value={manualEpisode}
-                onChange={(event) => setManualEpisode(event.target.value)}
-                placeholder="Nº do episódio"
-                className="flex-1 rounded-lg border border-surface-border bg-surface px-3 py-2 font-mono text-white outline-none focus:border-flame"
-              />
-              <Button type="submit" variant="secondary">
-                Marcar
-              </Button>
-            </form>
-          )}
-
-          <div className="mt-8 border-t border-surface-border pt-4">
-            <button
-              type="button"
-              onClick={handleDelete}
-              disabled={deleteSeries.isPending}
-              className="text-sm text-fuchsia hover:text-fuchsia/80 disabled:opacity-50"
-            >
-              {deleteSeries.isPending ? 'Removendo…' : 'Remover série da lista'}
-            </button>
-          </div>
         </div>
       </div>
     </div>
