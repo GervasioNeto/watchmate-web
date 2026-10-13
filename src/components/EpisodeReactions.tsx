@@ -1,5 +1,6 @@
 import { useEpisodeReactions, useSetEpisodeReaction } from '@/hooks/useEpisodeReactions';
-import { useMe } from '@/hooks/useMe';
+import { useFindGroupMember, useMe } from '@/hooks/useMe';
+import { UserAvatar } from '@/components/UserAvatar';
 import { getReactionSummary } from '@/lib/reactionSummary';
 
 const REACTION_EMOJIS = ['❤️', '😂', '😐', '😮', '😢', '🔥'];
@@ -13,6 +14,7 @@ interface EpisodeReactionsProps {
 
 export function EpisodeReactions({ seriesId, season, episode, enabled }: EpisodeReactionsProps) {
   const { data: me } = useMe();
+  const findMember = useFindGroupMember();
   const { data: reactions = [] } = useEpisodeReactions(seriesId, season, episode, enabled);
   const setReaction = useSetEpisodeReaction(
     seriesId,
@@ -51,20 +53,17 @@ export function EpisodeReactions({ seriesId, season, episode, enabled }: Episode
         <div className="flex flex-wrap items-center gap-1.5">
           {reactions.map((reaction) => {
             const isMe = reaction.usuario.id === me?.id;
-            const letter = (reaction.usuario.nome ?? '?')[0]?.toUpperCase() ?? '?';
             return (
               <span
                 key={reaction.usuario.id}
                 title={reaction.usuario.nome ?? undefined}
                 className="flex items-center gap-1.5 rounded-full bg-surface py-1 pr-2.5 pl-1 text-sm text-neutral-300"
               >
-                <span
-                  className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-semibold text-white ${
-                    isMe ? 'bg-ultramarine' : 'bg-fuchsia'
-                  }`}
-                >
-                  {letter}
-                </span>
+                <UserAvatar
+                  user={findMember(reaction.usuario.id) ?? reaction.usuario}
+                  tone={isMe ? 'me' : 'partner'}
+                  className="h-5 w-5 text-[10px]"
+                />
                 {reaction.emoji}
               </span>
             );

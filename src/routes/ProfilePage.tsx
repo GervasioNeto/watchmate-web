@@ -1,11 +1,14 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Navigate } from 'react-router-dom';
 import { AppHeader } from '@/components/AppHeader';
+import { AvatarPicker } from '@/components/AvatarPicker';
 import { Button } from '@/components/Button';
+import { Modal } from '@/components/Modal';
+import { AVATAR_SHAPE, UserAvatar } from '@/components/UserAvatar';
 import { useGroup, usePatchGroup } from '@/hooks/useGroup';
 import { useMe, usePatchMe } from '@/hooks/useMe';
 import { supabase } from '@/lib/supabase';
-import { Copy } from 'lucide-react';
+import { Copy, Pencil } from 'lucide-react';
 
 export function ProfilePage() {
   const { data: me } = useMe();
@@ -21,6 +24,7 @@ export function ProfilePage() {
   const [nameFeedback, setNameFeedback] = useState<string | null>(null);
   const [groupFeedback, setGroupFeedback] = useState<string | null>(null);
   const [justCopiedInvite, setJustCopiedInvite] = useState(false);
+  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
 
   useEffect(() => {
     if (me) setNameInput(me.nome ?? '');
@@ -33,8 +37,6 @@ export function ProfilePage() {
   if (!isGroupLoading && group === null) {
     return <Navigate to="/onboarding" replace />;
   }
-
-  const meLetter = (me?.nome ?? me?.email ?? 'V')[0]?.toUpperCase() ?? 'V';
 
   async function handleSaveName(event: FormEvent) {
     event.preventDefault();
@@ -64,11 +66,27 @@ export function ProfilePage() {
 
       <div className="mx-auto flex max-w-xl flex-col gap-6 px-4 py-6">
         <section className="flex flex-col items-center gap-2">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-ultramarine font-heading text-2xl font-semibold text-white">
-            {meLetter}
-          </div>
+          <button
+            type="button"
+            onClick={() => setIsAvatarModalOpen(true)}
+            aria-label="Trocar avatar"
+            className={`group relative transition-transform active:scale-95 ${AVATAR_SHAPE}`}
+          >
+            <UserAvatar user={me} fallback="V" className="h-30 w-30 text-2xl" />
+            <span className="absolute -right-1.5 -bottom-1.5 flex h-8 w-8 items-center justify-center rounded-full bg-flame text-white ring-2 ring-surface transition-transform group-hover:scale-110">
+              <Pencil size={16} />
+            </span>
+          </button>
           <p className="text-sm text-neutral-400">{me?.email}</p>
         </section>
+
+        <Modal
+          open={isAvatarModalOpen}
+          onClose={() => setIsAvatarModalOpen(false)}
+          title="Escolha seu avatar"
+        >
+          <AvatarPicker current={me} onPicked={() => setIsAvatarModalOpen(false)} />
+        </Modal>
 
         <section className="rounded-2xl border border-surface-border bg-surface-raised p-4">
           <h2 className="font-heading text-sm font-semibold text-white">Seu nome</h2>
@@ -151,9 +169,11 @@ export function ProfilePage() {
               <p className="text-xs text-neutral-400">Membros</p>
               {members.map((member) => (
                 <div key={member.usuario.id} className="flex items-center gap-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-fuchsia text-xs font-semibold text-white">
-                    {(member.usuario.nome ?? member.usuario.email)[0]?.toUpperCase() ?? '?'}
-                  </div>
+                  <UserAvatar
+                    user={member.usuario}
+                    tone={member.usuario.id === me?.id ? 'me' : 'partner'}
+                    className="h-8 w-8 text-xs"
+                  />
                   <p className="truncate text-sm text-white">
                     {member.usuario.nome ?? member.usuario.email}
                     {member.usuario.id === me?.id && (

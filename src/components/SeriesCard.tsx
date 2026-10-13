@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useEpisodeProgress } from '@/hooks/useEpisodeProgress';
 import { useMe } from '@/hooks/useMe';
+import { UserAvatar } from '@/components/UserAvatar';
 import { tmdbPosterUrl } from '@/lib/tmdb';
 import { getSeriesProgressPercent } from '@/lib/progress';
 import type { TrackedSeries } from '@/types/api';
@@ -18,13 +19,10 @@ export function SeriesCard({ series }: { series: TrackedSeries }) {
 
   const partner = me?.membroDoGrupo?.grupo.membros.find((member) => member.usuario.id !== me?.id);
   const addedByMe = !!series.adicionadoPor && series.adicionadoPor === me?.id;
-  const addedByPartner = !!series.adicionadoPor && !!partner && series.adicionadoPor === partner.usuario.id;
-  const adderName = addedByMe
-    ? (me?.nome ?? me?.email ?? null)
-    : addedByPartner
-      ? (partner!.usuario.nome ?? partner!.usuario.email)
-      : null;
-  const adderLetter = adderName ? adderName[0]?.toUpperCase() : null;
+  const addedByPartner =
+    !!series.adicionadoPor && !!partner && series.adicionadoPor === partner.usuario.id;
+  const adder = addedByMe ? me : addedByPartner ? partner!.usuario : null;
+  const adderName = adder ? (adder.nome ?? adder.email) : null;
 
   return (
     <div
@@ -52,14 +50,13 @@ export function SeriesCard({ series }: { series: TrackedSeries }) {
         </div>
       )}
 
-      {adderLetter && (
-        <div
-          title={`Adicionada por ${adderName}`}
-          className={`absolute top-1.5 left-1.5 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-semibold text-white ring-1 ring-black/20 ${
-            addedByMe ? 'bg-ultramarine' : 'bg-fuchsia'
-          }`}
-        >
-          {adderLetter}
+      {adder && (
+        <div title={`Adicionada por ${adderName}`} className="absolute top-1.5 left-1.5">
+          <UserAvatar
+            user={adder}
+            tone={addedByMe ? 'me' : 'partner'}
+            className="h-5 w-5 text-[10px] ring-1 ring-black/20"
+          />
         </div>
       )}
 

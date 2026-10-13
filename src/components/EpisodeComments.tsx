@@ -2,12 +2,13 @@ import { useState, type FormEvent } from 'react';
 import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/Button';
 import { Skeleton } from '@/components/Skeleton';
+import { AVATAR_SHAPE, UserAvatar } from '@/components/UserAvatar';
 import {
   useAddEpisodeComment,
   useDeleteEpisodeComment,
   useEpisodeComments,
 } from '@/hooks/useEpisodeComments';
-import { useMe } from '@/hooks/useMe';
+import { useFindGroupMember, useMe } from '@/hooks/useMe';
 
 interface EpisodeCommentsProps {
   seriesId: string;
@@ -27,6 +28,7 @@ function formatRelativeTime(iso: string) {
 
 export function EpisodeComments({ seriesId, season, episode, enabled }: EpisodeCommentsProps) {
   const { data: me } = useMe();
+  const findMember = useFindGroupMember();
   const { data: comments, isLoading } = useEpisodeComments(seriesId, season, episode, enabled);
   const addComment = useAddEpisodeComment(seriesId, season, episode);
   const deleteComment = useDeleteEpisodeComment(seriesId, season, episode);
@@ -46,7 +48,7 @@ export function EpisodeComments({ seriesId, season, episode, enabled }: EpisodeC
         <div className="flex flex-col gap-3">
           {[0, 1].map((index) => (
             <div key={index} className="flex items-start gap-2">
-              <Skeleton className="h-6 w-6 shrink-0 rounded-full" />
+              <Skeleton className={`h-6 w-6 shrink-0 ${AVATAR_SHAPE}`} />
               <div className="flex flex-1 flex-col gap-1.5">
                 <Skeleton className="h-2.5 w-24" />
                 <Skeleton className="h-2.5 w-full max-w-52" />
@@ -61,7 +63,6 @@ export function EpisodeComments({ seriesId, season, episode, enabled }: EpisodeC
             const displayName = isMe
               ? (me?.nome ?? me?.email?.split('@')[0] ?? 'Você')
               : (comment.usuario.nome ?? 'Seu par');
-            const letter = displayName.charAt(0).toUpperCase();
             return (
               <li
                 key={comment.id}
@@ -69,13 +70,11 @@ export function EpisodeComments({ seriesId, season, episode, enabled }: EpisodeC
                   index > 0 ? 'border-t border-surface-border' : ''
                 }`}
               >
-                <div
-                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white ${
-                    isMe ? 'bg-ultramarine' : 'bg-fuchsia'
-                  }`}
-                >
-                  {letter}
-                </div>
+                <UserAvatar
+                  user={{ ...findMember(comment.usuario.id), nome: displayName }}
+                  tone={isMe ? 'me' : 'partner'}
+                  className="h-6 w-6 text-[10px]"
+                />
                 <div className="min-w-0 flex-1">
                   <p className="flex items-center gap-1.5 text-xs">
                     <span className="font-semibold text-white">{displayName}</span>

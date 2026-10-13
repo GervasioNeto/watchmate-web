@@ -5,6 +5,7 @@ import { ContinueWatchingCard } from '@/components/ContinueWatchingCard';
 import { SeriesCard } from '@/components/SeriesCard';
 import { Skeleton } from '@/components/Skeleton';
 import { Button } from '@/components/Button';
+import { AVATAR_SHAPE, UserAvatar } from '@/components/UserAvatar';
 import { useEpisodeProgressForSeries } from '@/hooks/useEpisodeProgress';
 import { useMe } from '@/hooks/useMe';
 import { useGroup } from '@/hooks/useGroup';
@@ -46,10 +47,6 @@ export function MyListPage() {
   }
 
   const partner = me?.membroDoGrupo?.grupo.membros.find((member) => member.usuario.id !== me?.id);
-  const meLetter = (me?.nome ?? me?.email ?? 'V')[0]?.toUpperCase() ?? 'V';
-  const partnerLetter = partner
-    ? ((partner.usuario.nome ?? partner.usuario.email)[0]?.toUpperCase() ?? '♥')
-    : null;
   const restOfSeries = series?.filter((item) => item.id !== continueWatching?.item.id) ?? [];
 
   return (
@@ -58,18 +55,20 @@ export function MyListPage() {
 
       <div className="mx-auto max-w-6xl px-4 pt-4 pb-2">
         <div className="flex items-center">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-ultramarine font-heading text-sm font-semibold text-white ring-2 ring-surface">
-            {meLetter}
-          </div>
-          <div
-            className={`-ml-3 flex h-9 w-9 items-center justify-center rounded-full font-heading text-sm font-semibold ring-2 ring-surface ${
-              partner
-                ? 'bg-fuchsia text-white'
-                : 'border-2 border-dashed border-surface-border bg-surface text-neutral-500'
-            }`}
-          >
-            {partnerLetter ?? '♥'}
-          </div>
+          <UserAvatar user={me} fallback="V" className="h-9 w-9 text-sm ring-2 ring-surface" />
+          {partner ? (
+            <UserAvatar
+              user={partner.usuario}
+              tone="partner"
+              className="-ml-3 h-9 w-9 text-sm ring-2 ring-surface"
+            />
+          ) : (
+            <div
+              className={`-ml-3 flex h-9 w-9 items-center justify-center border-2 border-dashed border-surface-border bg-surface font-heading text-sm font-semibold text-neutral-500 ring-2 ring-surface ${AVATAR_SHAPE}`}
+            >
+              ♥
+            </div>
+          )}
         </div>
       </div>
 

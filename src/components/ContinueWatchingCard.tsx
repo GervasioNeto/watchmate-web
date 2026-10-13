@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/Button';
 import { useMarkEpisode } from '@/hooks/useEpisodeProgress';
 import { useMe } from '@/hooks/useMe';
+import { UserAvatar } from '@/components/UserAvatar';
 import {
   getCurrentPosition,
   getNextEpisode,
@@ -31,12 +32,8 @@ export function ContinueWatchingCard({ series, progress }: ContinueWatchingCardP
   const addedByMe = !!series.adicionadoPor && series.adicionadoPor === me?.id;
   const addedByPartner =
     !!series.adicionadoPor && !!partner && series.adicionadoPor === partner.usuario.id;
-  const adderName = addedByMe
-    ? (me?.nome ?? me?.email ?? null)
-    : addedByPartner
-      ? (partner!.usuario.nome ?? partner!.usuario.email)
-      : null;
-  const adderLetter = adderName ? adderName[0]?.toUpperCase() : null;
+  const adder = addedByMe ? me : addedByPartner ? partner!.usuario : null;
+  const adderName = adder ? (adder.nome ?? adder.email) : null;
 
   return (
     <div className="overflow-hidden rounded-2xl border border-surface-border bg-surface-raised">
@@ -82,15 +79,13 @@ export function ContinueWatchingCard({ series, progress }: ContinueWatchingCardP
             />
           </div>
 
-          {adderLetter && (
+          {adder && (
             <div className="mt-0.5 flex items-center gap-1.5">
-              <div
-                className={`flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-semibold text-white ${
-                  addedByMe ? 'bg-ultramarine' : 'bg-fuchsia'
-                }`}
-              >
-                {adderLetter}
-              </div>
+              <UserAvatar
+                user={adder}
+                tone={addedByMe ? 'me' : 'partner'}
+                className="h-4 w-4 text-[9px]"
+              />
               <span className="truncate text-[11px] text-neutral-300">
                 Adicionada por {adderName}
               </span>
