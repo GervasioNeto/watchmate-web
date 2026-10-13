@@ -82,20 +82,30 @@
   }
 }
 
-/* Menus de ação usam a Popover API nativa e abrem como folha no rodapé da tela. */
-[popover].action-sheet {
+/*
+ * Menus de ação: <dialog> modal aberto como folha no rodapé da tela (ActionSheet).
+ * Modal deixa o resto da página inerte; o fundo escuro bloqueia os cliques.
+ */
+dialog.action-sheet {
   inset: auto 0 0 0;
   margin: 0 auto;
   width: 100%;
   max-width: 28rem;
+  max-height: calc(100dvh - 1rem);
+  overflow-y: auto;
   border: 0;
   padding: 0;
   background: transparent;
   color: inherit;
 }
 
-[popover].action-sheet::backdrop {
+dialog.action-sheet::backdrop {
   background: rgb(0 0 0 / 0.55);
+}
+
+/* Enquanto um menu está aberto, a página atrás não rola. */
+html:has(dialog.action-sheet[open]) {
+  overflow: hidden;
 }
 
 @media (prefers-reduced-motion: reduce) {
