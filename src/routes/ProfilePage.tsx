@@ -1,91 +1,22 @@
-import { useId, useState, type FormEvent, type ReactNode } from 'react';
+import { useId, useState } from 'react';
 import { Navigate } from 'react-router-dom';
+import { LogOut } from 'lucide-react';
 import { AppHeader } from '@/components/AppHeader';
-import { InviteCode } from '@/components/InviteCode';
 import { AvatarPicker } from '@/components/profile/AvatarPicker';
+import { CoupleHero } from '@/components/profile/CoupleHero';
+import { EditableTextRow, SettingsList, SettingsRow } from '@/components/profile/SettingsList';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
-import { TextInput } from '@/components/ui/TextInput';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { useCouple } from '@/hooks/useCouple';
 import { useGroup, usePatchGroup } from '@/hooks/useGroup';
 import { useMe, usePatchMe } from '@/hooks/useMe';
+import { AVATAR_STYLES } from '@/lib/avatarStyles';
 import { supabase } from '@/lib/supabase';
-
-function Section({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section className="flex flex-col gap-3 border-t border-line pt-5">
-      <h2 className="text-sm font-semibold text-fg-muted">{title}</h2>
-      {children}
-    </section>
-  );
-}
-
-interface NameFormProps {
-  id: string;
-  label: string;
-  initialValue: string;
-  placeholder: string;
-  onSave: (value: string) => Promise<unknown>;
-  isSaving: boolean;
-}
-
-function NameForm({ id, label, initialValue, placeholder, onSave, isSaving }: NameFormProps) {
-  const [value, setValue] = useState(initialValue);
-  const [feedback, setFeedback] = useState<{ ok: boolean; message: string } | null>(null);
-
-  // Quando o valor salvo muda (carregou do servidor ou acabou de salvar), o campo acompanha.
-  const [syncedInitial, setSyncedInitial] = useState(initialValue);
-  if (initialValue !== syncedInitial) {
-    setSyncedInitial(initialValue);
-    setValue(initialValue);
-  }
-
-  async function handleSubmit(event: FormEvent) {
-    event.preventDefault();
-    setFeedback(null);
-    try {
-      await onSave(value.trim());
-      setFeedback({ ok: true, message: 'Salvo.' });
-    } catch {
-      setFeedback({ ok: false, message: 'Não foi possível salvar.' });
-    }
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-sm">
-        {label}
-      </label>
-      <div className="flex gap-2">
-        <TextInput
-          id={id}
-          type="text"
-          value={value}
-          onChange={(event) => setValue(event.target.value)}
-          placeholder={placeholder}
-          className="flex-1"
-        />
-        <Button
-          type="submit"
-          variant="secondary"
-          isLoading={isSaving}
-          disabled={!value.trim() || value.trim() === initialValue}
-        >
-          Salvar
-        </Button>
-      </div>
-      {feedback && (
-        <p role="status" className={feedback.ok ? 'text-sm text-fg-muted' : 'text-sm text-danger'}>
-          {feedback.message}
-        </p>
-      )}
-    </form>
-  );
-}
 
 export function ProfilePage() {
   const { data: me } = useMe();
-  const couple = useCouple();
+  const { me: mePerson, partner } = useCouple();
   const { data: group, isLoading: isGroupLoading } = useGroup();
   const patchMe = usePatchMe();
   const patchGroup = usePatchGroup();
@@ -96,94 +27,91 @@ export function ProfilePage() {
     return <Navigate to="/onboarding" replace />;
   }
 
-  const people = [couple.me, couple.partner].filter((person) => person !== null);
-
   return (
     <div className="min-h-svh">
       <AppHeader />
 
-      <main className="mx-auto flex max-w-xl flex-col gap-6 px-4 pt-6 pb-16">
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-4">
-            <Avatar person={couple.me} size="lg" />
-            <div className="flex min-w-0 flex-col items-start gap-1">
-              <h1 className="max-w-full truncate text-2xl font-extrabold tracking-tight">
-                {couple.me?.name ?? 'Seu perfil'}
-              </h1>
-              <p className="max-w-full truncate text-sm text-fg-muted">{me?.email}</p>
-              {couple.me && (
+      <main className="mx-auto flex max-w-xl flex-col gap-8 px-4 pt-6 pb-16">
+        {mePerson && group ? (
+          <CoupleHero
+            me={mePerson}
+            partner={partner}
+            groupName={group.nome}
+            since={group.criadoEm}
+            inviteCode={partner ? null : group.codigoConvite}
+          />
+        ) : (
+          <Skeleton className="h-72 rounded-lg" />
+        )}
+
+        {mePerson && me && (
+          <SettingsList title="Você">
+            <SettingsRow
+              label="Avatar"
+              action={
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setIsPickingAvatar((open) => !open)}
                   aria-expanded={isPickingAvatar}
                   aria-controls={isPickingAvatar ? avatarPickerId : undefined}
-                  className="-ml-3"
+                  className="-mr-3"
                 >
-                  {isPickingAvatar
-                    ? 'Pronto'
-                    : couple.me.avatar
-                      ? 'Trocar avatar'
-                      : 'Escolher avatar'}
+                  {isPickingAvatar ? 'Pronto' : mePerson.avatar ? 'Trocar' : 'Escolher'}
                 </Button>
-              )}
-            </div>
-          </div>
-          {isPickingAvatar && couple.me && (
-            <div id={avatarPickerId}>
-              <AvatarPicker me={couple.me} />
-            </div>
-          )}
-        </div>
-
-        <Section title="Você">
-          <NameForm
-            id="profile-name"
-            label="Seu nome"
-            initialValue={me?.nome ?? ''}
-            placeholder="Como aparece para o seu par"
-            onSave={(value) => patchMe.mutateAsync(value)}
-            isSaving={patchMe.isPending}
-          />
-        </Section>
-
-        {group && (
-          <Section title="Grupo">
-            <NameForm
-              id="group-name"
-              label="Nome do grupo"
-              initialValue={group.nome ?? ''}
-              placeholder="Nome do grupo"
-              onSave={(value) => patchGroup.mutateAsync(value)}
-              isSaving={patchGroup.isPending}
-            />
-
-            <ul className="flex flex-col gap-2.5">
-              {people.map((person) => (
-                <li key={person.id} className="flex items-center gap-3">
-                  <Avatar person={person} size="sm" />
-                  <span className="truncate text-sm">
-                    {person.name}
-                    {person.role === 'me' && <span className="text-fg-subtle"> (você)</span>}
-                  </span>
-                </li>
-              ))}
-            </ul>
-
-            {!couple.partner && couple.me && (
-              <div className="flex flex-col gap-1">
-                <p className="text-sm text-fg-muted">Código para seu par entrar no grupo</p>
-                <InviteCode code={group.codigoConvite} />
+              }
+            >
+              <span className="flex items-center gap-2">
+                <Avatar person={mePerson} size="sm" />
+                {mePerson.avatar ? AVATAR_STYLES[mePerson.avatar.style].label : 'Sua inicial'}
+              </span>
+            </SettingsRow>
+            {isPickingAvatar && (
+              <div id={avatarPickerId} className="py-3">
+                <AvatarPicker me={mePerson} />
               </div>
             )}
-          </Section>
+            <EditableTextRow
+              label="Nome"
+              value={me.nome ?? ''}
+              placeholder="Como aparece para o seu par"
+              onSave={(value) => patchMe.mutateAsync(value)}
+            />
+            <SettingsRow label="E-mail">
+              <span className="block truncate">{me.email}</span>
+            </SettingsRow>
+          </SettingsList>
         )}
 
-        <div className="border-t border-line pt-5">
-          <Button variant="ghost" onClick={() => supabase.auth.signOut()} className="-ml-4">
-            Sair da conta
-          </Button>
-        </div>
+        {group && (
+          <SettingsList title="A dupla">
+            <EditableTextRow
+              label="Nome do grupo"
+              value={group.nome ?? ''}
+              placeholder="Dê um nome para a dupla"
+              onSave={(value) => patchGroup.mutateAsync(value)}
+            />
+            <SettingsRow label="Seu par">
+              {partner ? (
+                <span className="flex items-center gap-2">
+                  <Avatar person={partner} size="sm" />
+                  <span className="truncate">{partner.name}</span>
+                </span>
+              ) : (
+                <span className="text-fg-subtle">Ainda não entrou. O código está lá em cima.</span>
+              )}
+            </SettingsRow>
+          </SettingsList>
+        )}
+
+        <Button
+          variant="ghost"
+          onClick={() => supabase.auth.signOut()}
+          className="-ml-4 self-start"
+        >
+          <LogOut size={16} aria-hidden />
+          Sair da conta
+        </Button>
       </main>
     </div>
   );
