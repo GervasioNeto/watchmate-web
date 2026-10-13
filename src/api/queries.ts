@@ -5,6 +5,7 @@ import { groupService } from '@/api/services/groupService';
 import { meService } from '@/api/services/meService';
 import { progressService } from '@/api/services/progressService';
 import { seriesService } from '@/api/services/seriesService';
+import type { AvatarStyleId } from '@/lib/avatarStyles';
 
 // Each factory pairs a cache key with its fetcher. The returned queryKey is
 // typed with its data, so setQueryData/getQueryData infer the right shape.
@@ -12,6 +13,17 @@ import { seriesService } from '@/api/services/seriesService';
 
 export const meQueries = {
   detail: () => queryOptions({ queryKey: queryKeys.me(), queryFn: meService.get }),
+};
+
+export const avatarQueries = {
+  // O SVG de um estilo+semente nunca muda: gera uma vez e reaproveita em todas as telas.
+  image: (style: AvatarStyleId, seed: string) =>
+    queryOptions({
+      queryKey: queryKeys.avatar(style, seed),
+      queryFn: async () => (await import('@/lib/avatar')).renderAvatar(style, seed),
+      staleTime: Infinity,
+      gcTime: Infinity,
+    }),
 };
 
 export const groupQueries = {

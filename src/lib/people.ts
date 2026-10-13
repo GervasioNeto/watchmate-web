@@ -1,4 +1,5 @@
-import type { Me } from '@/types/api';
+import { isAvatarStyle, type AvatarStyleId } from '@/lib/avatarStyles';
+import type { AvatarFields, Me } from '@/types/api';
 
 export type PersonRole = 'me' | 'partner';
 
@@ -10,6 +11,8 @@ export interface Person {
   // Primeiro nome, para espaços curtos ("Larissa está 2 à frente").
   shortName: string;
   initial: string;
+  // Avatar do DiceBear escolhido no perfil; null desenha a inicial.
+  avatar: { style: AvatarStyleId; seed: string } | null;
 }
 
 export interface Couple {
@@ -32,16 +35,22 @@ export function displayName(
 }
 
 function toPerson(
-  user: { id: string; nome: string | null; email?: string | null },
+  user: AvatarFields & { id: string; nome: string | null; email?: string | null },
   role: PersonRole,
 ): Person {
   const name = displayName(user, role === 'me' ? ME_FALLBACK : PARTNER_FALLBACK);
+  // Estilos que o app não conhece mais (removidos do registro) caem na inicial.
+  const avatar =
+    isAvatarStyle(user.avatarEstilo) && user.avatarSemente
+      ? { style: user.avatarEstilo, seed: user.avatarSemente }
+      : null;
   return {
     id: user.id,
     role,
     name,
     shortName: name.split(/\s+/)[0] ?? name,
     initial: name.charAt(0).toUpperCase(),
+    avatar,
   };
 }
 

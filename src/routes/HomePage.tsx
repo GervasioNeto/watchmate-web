@@ -13,6 +13,7 @@ const DEMO_ME: Person = {
   name: 'Você',
   shortName: 'Você',
   initial: 'V',
+  avatar: { style: 'fun-emoji', seed: 'watchmate-voce' },
 };
 const DEMO_PARTNER: Person = {
   id: 'demo-partner',
@@ -20,6 +21,7 @@ const DEMO_PARTNER: Person = {
   name: 'Rafa',
   shortName: 'Rafa',
   initial: 'R',
+  avatar: { style: 'fun-emoji', seed: 'watchmate-rafa' },
 };
 
 const POINTS = [

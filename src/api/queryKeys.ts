@@ -3,6 +3,8 @@
 export const queryKeys = {
   me: () => ['me'] as const,
   group: () => ['group'] as const,
+  // Imagem gerada localmente pelo DiceBear (não vem da API).
+  avatar: (style: string, seed: string) => ['avatar', style, seed] as const,
 
   series: {
     all: () => ['series'] as const,

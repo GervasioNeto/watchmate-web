@@ -1,7 +1,8 @@
-import { useState, type FormEvent, type ReactNode } from 'react';
+import { useId, useState, type FormEvent, type ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import { AppHeader } from '@/components/AppHeader';
 import { InviteCode } from '@/components/InviteCode';
+import { AvatarPicker } from '@/components/profile/AvatarPicker';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
@@ -88,6 +89,8 @@ export function ProfilePage() {
   const { data: group, isLoading: isGroupLoading } = useGroup();
   const patchMe = usePatchMe();
   const patchGroup = usePatchGroup();
+  const [isPickingAvatar, setIsPickingAvatar] = useState(false);
+  const avatarPickerId = useId();
 
   if (!isGroupLoading && group === null) {
     return <Navigate to="/onboarding" replace />;
@@ -100,14 +103,37 @@ export function ProfilePage() {
       <AppHeader />
 
       <main className="mx-auto flex max-w-xl flex-col gap-6 px-4 pt-6 pb-16">
-        <div className="flex items-center gap-4">
-          <Avatar person={couple.me} size="lg" />
-          <div className="min-w-0">
-            <h1 className="truncate text-2xl font-extrabold tracking-tight">
-              {couple.me?.name ?? 'Seu perfil'}
-            </h1>
-            <p className="truncate text-sm text-fg-muted">{me?.email}</p>
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-4">
+            <Avatar person={couple.me} size="lg" />
+            <div className="flex min-w-0 flex-col items-start gap-1">
+              <h1 className="max-w-full truncate text-2xl font-extrabold tracking-tight">
+                {couple.me?.name ?? 'Seu perfil'}
+              </h1>
+              <p className="max-w-full truncate text-sm text-fg-muted">{me?.email}</p>
+              {couple.me && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsPickingAvatar((open) => !open)}
+                  aria-expanded={isPickingAvatar}
+                  aria-controls={isPickingAvatar ? avatarPickerId : undefined}
+                  className="-ml-3"
+                >
+                  {isPickingAvatar
+                    ? 'Pronto'
+                    : couple.me.avatar
+                      ? 'Trocar avatar'
+                      : 'Escolher avatar'}
+                </Button>
+              )}
+            </div>
           </div>
+          {isPickingAvatar && couple.me && (
+            <div id={avatarPickerId}>
+              <AvatarPicker me={couple.me} />
+            </div>
+          )}
         </div>
 
         <Section title="Você">

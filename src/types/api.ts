@@ -1,12 +1,16 @@
 // Field names mirror the API's JSON response shape (Portuguese, from the Prisma schema).
 // Type names are in English to follow this codebase's naming convention.
 
-export interface User {
+// Both null until the user picks an avatar — UI falls back to initials.
+export interface AvatarFields {
+  avatarEstilo: string | null;
+  avatarSemente: string | null;
+}
+
+export interface User extends AvatarFields {
   id: string;
   email: string;
   nome: string | null;
-  avatarEstilo: string | null;
-  avatarSemente: string | null;
   criadoEm: string;
 }
 
@@ -26,7 +30,7 @@ export interface Group {
 }
 
 export interface GroupMemberSummary {
-  usuario: {
+  usuario: AvatarFields & {
     id: string;
     nome: string | null;
     email: string;
