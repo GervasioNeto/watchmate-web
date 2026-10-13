@@ -1,4 +1,4 @@
-import type { SeasonReaction } from '@/types/api';
+import type { EpisodeReaction } from '@/types/api';
 
 export interface SharedReactionMoment {
   emoji: string;
@@ -21,12 +21,12 @@ function defaultPhrase(emoji: string, count: number): string {
 
 // Agrupa as reações por episódio, compara as duas pessoas e conta quantas
 // vezes reagiram com o mesmo emoji — sem comparar quem "gostou mais", só
-// os momentos em que sentiram a mesma coisa juntos.
+// os momentos em que sentiram a mesma coisa juntos. Reações ocultas ficam de fora.
 export function getSharedReactionMoments(
-  reactions: SeasonReaction[],
+  reactions: EpisodeReaction[],
   meId: string,
 ): SharedReactionMoment[] {
-  const byEpisode = new Map<number, SeasonReaction[]>();
+  const byEpisode = new Map<number, EpisodeReaction[]>();
   for (const reaction of reactions) {
     const list = byEpisode.get(reaction.episodio) ?? [];
     list.push(reaction);
@@ -35,9 +35,9 @@ export function getSharedReactionMoments(
 
   const counts = new Map<string, number>();
   for (const entries of byEpisode.values()) {
-    const mine = entries.find((entry) => entry.usuario.id === meId);
-    const theirs = entries.find((entry) => entry.usuario.id !== meId);
-    if (mine && theirs && mine.emoji === theirs.emoji) {
+    const mine = entries.find((entry) => entry.usuarioId === meId);
+    const theirs = entries.find((entry) => entry.usuarioId !== meId);
+    if (mine && theirs && !mine.oculto && !theirs.oculto && mine.emoji === theirs.emoji) {
       counts.set(mine.emoji, (counts.get(mine.emoji) ?? 0) + 1);
     }
   }

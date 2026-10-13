@@ -1,6 +1,8 @@
 import { useId } from 'react';
+import { cx } from '@/lib/cx';
 
-export function Wordmark() {
+// O logo mantém as cores originais da marca, sem passar pelos tokens.
+export function Wordmark({ className }: { className?: string }) {
   const clipId = useId();
 
   return (
@@ -9,7 +11,7 @@ export function Wordmark() {
       role="img"
       aria-label="WatchMate"
       shapeRendering="geometricPrecision"
-      className="h-14 w-auto"
+      className={cx('w-auto', className ?? 'h-9')}
     >
       <clipPath id={clipId}>
         <rect width="1014" height="223" />
