@@ -1,12 +1,19 @@
 import { useState, type FormEvent } from 'react';
-import { Navigate } from 'react-router-dom';
-import { Button } from '@/components/Button';
+import { Link, Navigate } from 'react-router-dom';
 import { GoogleSignInButton } from '@/components/GoogleSignInButton';
 import { Wordmark } from '@/components/Wordmark';
+import { Button } from '@/components/ui/Button';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
+import { TextInput } from '@/components/ui/TextInput';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 
 type Mode = 'login' | 'signup';
+
+const MODE_OPTIONS: { value: Mode; label: string }[] = [
+  { value: 'login', label: 'Entrar' },
+  { value: 'signup', label: 'Criar conta' },
+];
 
 export function LoginPage() {
   const { session, isLoading: isSessionLoading } = useAuth();
@@ -19,6 +26,12 @@ export function LoginPage() {
 
   if (!isSessionLoading && session) {
     return <Navigate to="/my-list" replace />;
+  }
+
+  function changeMode(next: Mode) {
+    setMode(next);
+    setError(null);
+    setSignupSuccess(false);
   }
 
   async function handleSubmit(event: FormEvent) {
@@ -44,85 +57,74 @@ export function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center px-6 py-12">
-      <div className="mb-8">
-        <Wordmark />
+    <div className="mx-auto flex min-h-svh max-w-sm flex-col justify-center gap-8 px-4 py-12">
+      <Link to="/" aria-label="WatchMate, página inicial" className="self-start rounded-md">
+        <Wordmark className="h-10" />
+      </Link>
+
+      <div className="flex flex-col gap-1">
+        <h1 className="text-2xl font-extrabold tracking-tight">
+          {mode === 'login' ? 'Entrar na sua conta' : 'Criar uma conta'}
+        </h1>
+        <p className="text-sm text-fg-muted">
+          {mode === 'login'
+            ? 'Continue de onde vocês pararam.'
+            : 'Depois você convida seu par com um código.'}
+        </p>
       </div>
 
-      <div className="w-full max-w-sm rounded-2xl border border-surface-border bg-surface-raised p-6">
-        <div className="mb-6 flex gap-1 rounded-xl bg-surface p-1">
-          <button
-            type="button"
-            className={`flex-1 rounded-lg py-2 text-sm font-semibold transition-colors ${
-              mode === 'login' ? 'bg-flame text-white' : 'text-neutral-400'
-            }`}
-            onClick={() => {
-              setMode('login');
-              setError(null);
-              setSignupSuccess(false);
-            }}
-          >
-            Entrar
-          </button>
-          <button
-            type="button"
-            className={`flex-1 rounded-lg py-2 text-sm font-semibold transition-colors ${
-              mode === 'signup' ? 'bg-flame text-white' : 'text-neutral-400'
-            }`}
-            onClick={() => {
-              setMode('signup');
-              setError(null);
-              setSignupSuccess(false);
-            }}
-          >
-            Criar conta
-          </button>
+      <div className="flex flex-col gap-5">
+        <SegmentedControl
+          label="Entrar ou criar conta"
+          options={MODE_OPTIONS}
+          value={mode}
+          onChange={changeMode}
+        />
+
+        <GoogleSignInButton onError={setError} />
+
+        <div className="flex items-center gap-3 text-xs text-fg-subtle">
+          <div className="h-px flex-1 bg-line" />
+          ou com e-mail
+          <div className="h-px flex-1 bg-line" />
         </div>
 
-        <div className="mb-4">
-          <GoogleSignInButton onError={setError} />
-        </div>
-
-        <div className="mb-4 flex items-center gap-3 text-xs uppercase tracking-wide text-neutral-500">
-          <div className="h-px flex-1 bg-surface-border" />
-          ou
-          <div className="h-px flex-1 bg-surface-border" />
-        </div>
-
-        {error && <p className="mb-4 text-sm text-fuchsia">{error}</p>}
+        {error && (
+          <p role="alert" className="text-sm text-danger">
+            {error}
+          </p>
+        )}
 
         {signupSuccess ? (
-          <p className="text-center text-sm text-neutral-300">
-            Conta criada! Verifique seu e-mail para confirmar o cadastro antes de entrar.
+          <p role="status" className="text-sm text-fg-muted">
+            Conta criada. Confirme o cadastro pelo link que enviamos para {email} e depois entre.
           </p>
         ) : (
           <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-            <label className="flex flex-col gap-1.5 text-sm text-neutral-300">
+            <label className="flex flex-col gap-1.5 text-sm">
               E-mail
-              <input
+              <TextInput
                 type="email"
                 required
                 autoComplete="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                className="rounded-lg border border-surface-border bg-surface px-3 py-2.5 text-white outline-none focus:border-flame"
               />
             </label>
 
-            <label className="flex flex-col gap-1.5 text-sm text-neutral-300">
+            <label className="flex flex-col gap-1.5 text-sm">
               Senha
-              <input
+              <TextInput
                 type="password"
                 required
                 minLength={6}
                 autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                className="rounded-lg border border-surface-border bg-surface px-3 py-2.5 text-white outline-none focus:border-flame"
               />
             </label>
 
-            <Button type="submit" isLoading={isSubmitting} className="mt-2 w-full">
+            <Button type="submit" isLoading={isSubmitting} className="mt-1">
               {mode === 'login' ? 'Entrar' : 'Criar conta'}
             </Button>
           </form>

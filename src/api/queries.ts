@@ -28,7 +28,7 @@ export const seriesQueries = {
   progress: (seriesId: string) =>
     queryOptions({
       queryKey: queryKeys.series.progress(seriesId),
-      queryFn: () => progressService.list(seriesId),
+      queryFn: () => progressService.get(seriesId),
     }),
 };
 

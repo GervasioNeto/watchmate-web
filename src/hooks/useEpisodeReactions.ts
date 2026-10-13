@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { episodeQueries } from '@/api/queries';
+import { episodeQueries, seasonQueries } from '@/api/queries';
 import { episodeService } from '@/api/services/episodeService';
 import type { EpisodeReaction, EpisodeUser } from '@/types/api';
 
@@ -33,16 +33,23 @@ export function useSetEpisodeReaction(
       if (currentUser) {
         queryClient.setQueryData(queryKey, (old) => {
           const list = old ?? [];
+          const now = new Date().toISOString();
+          const existing = list.find((entry) => entry.usuarioId === currentUser.id);
           const optimistic: EpisodeReaction = {
-            emoji,
+            id: existing?.id ?? `optimistic-${currentUser.id}`,
+            serieAcompanhadaId: seriesId,
+            temporada: season,
+            episodio: episode,
+            usuarioId: currentUser.id,
             usuario: currentUser,
-            atualizadoEm: new Date().toISOString(),
+            criadoEm: existing?.criadoEm ?? now,
+            atualizadoEm: now,
+            oculto: false,
+            emoji,
           };
-          const index = list.findIndex((entry) => entry.usuario.id === currentUser.id);
-          if (index === -1) return [...list, optimistic];
-          const next = [...list];
-          next[index] = optimistic;
-          return next;
+          return existing
+            ? list.map((entry) => (entry === existing ? optimistic : entry))
+            : [...list, optimistic];
         });
       }
 
@@ -55,6 +62,10 @@ export function useSetEpisodeReaction(
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey });
+      // A retrospectiva da temporada é montada a partir dessas reações.
+      queryClient.invalidateQueries({
+        queryKey: seasonQueries.reactions(seriesId, season).queryKey,
+      });
     },
   });
 }

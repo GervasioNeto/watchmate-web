@@ -30,3 +30,20 @@ export const queryKeys = {
       [...queryKeys.episode.all(seriesId, season, episode), 'comments'] as const,
   },
 };
+
+// Reações e comentários do parceiro vêm ocultos em episódios que você ainda não viu.
+// Quando o seu progresso muda, essas listas precisam ser buscadas de novo.
+export function isSpoilerSensitiveKey(seriesId: string) {
+  const seriesPrefix = queryKeys.series.detail(seriesId);
+  return (queryKey: readonly unknown[]) =>
+    queryKey[0] === seriesPrefix[0] &&
+    queryKey[1] === seriesPrefix[1] &&
+    queryKey[2] === 'season' &&
+    (queryKey.at(-1) === 'reactions' || queryKey.at(-1) === 'comments');
+}
+
+// Mutations que alteram o progresso de uma série compartilham a chave, para que os
+// hooks saibam quando há mais de uma em andamento ao mesmo tempo.
+export const mutationKeys = {
+  progress: (seriesId: string) => ['progress', seriesId] as const,
+};

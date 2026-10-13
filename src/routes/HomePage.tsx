@@ -1,254 +1,127 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/Button';
+import { Link, useNavigate } from 'react-router-dom';
+import { EyeOff } from 'lucide-react';
+import { CoupleProgress } from '@/components/progress/CoupleProgress';
 import { Wordmark } from '@/components/Wordmark';
+import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/context/AuthContext';
+import type { Person } from '@/lib/people';
 
-const FEATURES = [
-  {
-    accent: 'bg-ultramarine/15 text-ultramarine',
-    icon: '📅',
-    title: 'Sincronizados sempre',
-    description:
-      'Vejam em que episódio vocês pararam sem precisar perguntar "onde estamos mesmo?".',
-  },
-  {
-    accent: 'bg-raspberry/15 text-raspberry',
-    icon: '💌',
-    title: 'Convide seu par',
-    description: 'Crie um grupo e compartilhe um código de convite. Simples assim, sem cadastro complicado.',
-  },
-  {
-    accent: 'bg-amber/15 text-amber',
-    icon: '📊',
-    title: 'Progresso visual',
-    description: 'Barras de progresso por série e por temporada mostram o quanto já assistiram juntos.',
-  },
-  {
-    accent: 'bg-flame/15 text-flame',
-    icon: '🔔',
-    title: 'Nunca percam o próximo',
-    description: 'Marquem episódios assistidos em um toque e saibam sempre qual é o próximo.',
-  },
-];
+// Dados de exemplo para a demonstração da página inicial.
+const DEMO_ME: Person = {
+  id: 'demo-me',
+  role: 'me',
+  name: 'Você',
+  shortName: 'Você',
+  initial: 'V',
+};
+const DEMO_PARTNER: Person = {
+  id: 'demo-partner',
+  role: 'partner',
+  name: 'Rafa',
+  shortName: 'Rafa',
+  initial: 'R',
+};
 
-const STEPS = [
+const POINTS = [
   {
-    color: 'bg-ultramarine',
-    title: 'Crie sua conta',
-    description: 'Cadastro rápido com e-mail e senha, sem enrolação.',
+    title: 'Cada um com o seu progresso',
+    body: 'Marque o que você viu. Seu par sabe até onde você chegou, e o app mostra o que vocês têm em comum.',
   },
   {
-    color: 'bg-raspberry',
-    title: 'Formem a dupla',
-    description: 'Crie um grupo e envie o código de convite pro seu par.',
+    title: 'Viram juntos? Um toque marca os dois',
+    body: 'No modo Juntos, marcar um episódio vale para a dupla. Dá para trocar para Cada um em qualquer série.',
   },
   {
-    color: 'bg-flame',
-    title: 'Assistam juntos',
-    description: 'Adicionem séries e marquem episódios conforme forem assistindo.',
+    title: 'Sem spoiler entre vocês',
+    body: 'Reações e comentários do seu par ficam escondidos até você assistir ao episódio.',
   },
 ];
 
 export function HomePage() {
   const navigate = useNavigate();
   const { session, isLoading } = useAuth();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-
   const isAuthed = !isLoading && !!session;
-
-  function goToApp() {
-    navigate(isAuthed ? '/my-list' : '/login');
-  }
 
   return (
     <div className="min-h-svh">
-      <header className="sticky top-0 z-20 border-b border-surface-border bg-surface/90 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-          <Wordmark />
-
-          <nav className="hidden items-center gap-6 md:flex">
-            <a href="#recursos" className="text-sm text-neutral-300 hover:text-white">
-              Recursos
-            </a>
-            <a href="#como-funciona" className="text-sm text-neutral-300 hover:text-white">
-              Como funciona
-            </a>
-            <Button onClick={goToApp} className="px-5 py-2.5 text-sm">
-              {isAuthed ? 'Minha lista' : 'Entrar'}
-            </Button>
-          </nav>
-
-          <button
-            type="button"
-            onClick={() => setIsMenuOpen((open) => !open)}
-            aria-label={isMenuOpen ? 'Fechar menu' : 'Abrir menu'}
-            aria-expanded={isMenuOpen}
-            className="flex h-10 w-10 flex-col items-center justify-center gap-1.5 md:hidden"
-          >
-            <span
-              className={`h-0.5 w-6 rounded-full bg-white transition-transform ${
-                isMenuOpen ? 'translate-y-2 rotate-45' : ''
-              }`}
-            />
-            <span
-              className={`h-0.5 w-6 rounded-full bg-white transition-opacity ${
-                isMenuOpen ? 'opacity-0' : ''
-              }`}
-            />
-            <span
-              className={`h-0.5 w-6 rounded-full bg-white transition-transform ${
-                isMenuOpen ? '-translate-y-2 -rotate-45' : ''
-              }`}
-            />
-          </button>
-        </div>
-
-        {isMenuOpen && (
-          <nav className="flex flex-col gap-1 border-t border-surface-border px-4 py-3 md:hidden">
-            <a
-              href="#recursos"
-              onClick={() => setIsMenuOpen(false)}
-              className="rounded-lg px-3 py-2.5 text-sm text-neutral-300 hover:bg-surface-raised hover:text-white"
-            >
-              Recursos
-            </a>
-            <a
-              href="#como-funciona"
-              onClick={() => setIsMenuOpen(false)}
-              className="rounded-lg px-3 py-2.5 text-sm text-neutral-300 hover:bg-surface-raised hover:text-white"
-            >
-              Como funciona
-            </a>
-            <Button
-              onClick={() => {
-                setIsMenuOpen(false);
-                goToApp();
-              }}
-              className="mt-2 w-full"
-            >
-              {isAuthed ? 'Minha lista' : 'Entrar'}
-            </Button>
-          </nav>
-        )}
+      <header className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
+        <Wordmark />
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={() => navigate(isAuthed ? '/my-list' : '/login')}
+        >
+          {isAuthed ? 'Minha lista' : 'Entrar'}
+        </Button>
       </header>
 
-      <main>
-        <section className="mx-auto flex max-w-3xl flex-col items-center px-4 pt-16 pb-14 text-center md:pt-24 md:pb-20">
-          <span className="rounded-full border border-surface-border bg-surface-raised px-3 py-1 text-xs text-amber">
-            Feito pra quem assiste séries a dois
-          </span>
-
-          <h1 className="mt-5 font-heading text-4xl font-semibold text-white md:text-5xl">
-            Assistam suas séries.{' '}
-            <span className="bg-gradient-to-r from-flame to-fuchsia bg-clip-text text-transparent">
-              Sempre no mesmo episódio.
-            </span>
-          </h1>
-
-          <p className="mt-4 max-w-xl text-neutral-400 md:text-lg">
-            O WatchMate mantém você e seu par sincronizados: adicionem séries, marquem o que já
-            assistiram e nunca mais percam o fio da história.
-          </p>
-
-          <div className="mt-8 flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-            <Button onClick={goToApp} className="w-full sm:w-auto">
-              {isAuthed ? 'Ir pra minha lista' : 'Começar agora'}
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={() => navigate('/login')}
-              className="w-full sm:w-auto"
-            >
-              {isAuthed ? 'Ver conta' : 'Já tenho conta'}
-            </Button>
-          </div>
-
-          <div className="mt-14 w-full max-w-md rounded-2xl border border-surface-border bg-surface-raised p-4">
-            <div className="flex items-center gap-3 rounded-xl bg-surface p-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ultramarine text-xs font-semibold text-white">
-                V
-              </div>
-              <div className="-ml-5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-fuchsia text-xs font-semibold text-white ring-2 ring-surface">
-                ♥
-              </div>
-              <div className="min-w-0 flex-1 text-left">
-                <p className="truncate font-heading text-sm font-semibold text-white">
-                  Nome da Série
-                </p>
-                <p className="font-mono text-xs text-neutral-400">T2 · Ep 5 de 10</p>
-              </div>
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-flame text-sm text-white">
-                ✓
-              </div>
-            </div>
-            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-surface">
-              <div className="h-full w-3/5 rounded-full bg-flame" />
-            </div>
-          </div>
-        </section>
-
-        <section id="recursos" className="border-t border-surface-border bg-surface-raised/40">
-          <div className="mx-auto max-w-6xl px-4 py-16">
-            <h2 className="text-center font-heading text-2xl font-semibold text-white md:text-3xl">
-              Tudo pra assistir em dupla
-            </h2>
-            <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-              {FEATURES.map((feature) => (
-                <div
-                  key={feature.title}
-                  className="rounded-2xl border border-surface-border bg-surface p-5"
+      <main className="mx-auto flex max-w-5xl flex-col gap-20 px-4 pt-10 pb-20 md:pt-20">
+        <section className="grid items-center gap-12 md:grid-cols-[1.1fr_1fr]">
+          <div className="flex flex-col gap-6">
+            <h1 className="text-4xl leading-[1.05] font-extrabold tracking-tight text-balance md:text-5xl">
+              A mesma série, cada um no seu ritmo.
+            </h1>
+            <p className="max-w-prose text-lg text-fg-muted">
+              O WatchMate guarda até onde cada um de vocês assistiu, marca de uma vez o que viram
+              juntos e esconde as reações do episódio que o outro ainda não viu.
+            </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <Button onClick={() => navigate(isAuthed ? '/my-list' : '/login')}>
+                {isAuthed ? 'Ir para a minha lista' : 'Começar'}
+              </Button>
+              {!isAuthed && (
+                <Link
+                  to="/login"
+                  className="px-2 text-sm font-semibold text-fg-muted hover:text-fg"
                 >
-                  <div
-                    className={`flex h-11 w-11 items-center justify-center rounded-xl text-xl ${feature.accent}`}
-                  >
-                    {feature.icon}
-                  </div>
-                  <h3 className="mt-4 font-heading text-base font-semibold text-white">
-                    {feature.title}
-                  </h3>
-                  <p className="mt-1.5 text-sm text-neutral-400">{feature.description}</p>
-                </div>
-              ))}
+                  Já tenho conta
+                </Link>
+              )}
             </div>
           </div>
+
+          <figure className="flex flex-col gap-3">
+            <figcaption className="flex items-baseline justify-between text-sm">
+              <span className="font-bold">Arcane</span>
+              <span className="text-fg-subtle">exemplo</span>
+            </figcaption>
+            <CoupleProgress
+              rows={[
+                { person: DEMO_ME, position: { temporada: 1, episodio: 4 }, percent: 44 },
+                { person: DEMO_PARTNER, position: { temporada: 1, episodio: 2 }, percent: 22 },
+              ]}
+              common={{
+                position: { temporada: 1, episodio: 2 },
+                summary: 'Você está 2 episódios à frente.',
+              }}
+            >
+              <p className="flex items-center gap-2 rounded-md border border-line px-3 py-2.5 text-sm text-fg-muted">
+                <EyeOff size={15} aria-hidden className="shrink-0" />
+                <span>Rafa reagiu ao T1 · E3. Assista para ver.</span>
+              </p>
+            </CoupleProgress>
+          </figure>
         </section>
 
-        <section id="como-funciona" className="border-t border-surface-border">
-          <div className="mx-auto max-w-4xl px-4 py-16">
-            <h2 className="text-center font-heading text-2xl font-semibold text-white md:text-3xl">
-              Como funciona
-            </h2>
-            <div className="mt-10 grid grid-cols-1 gap-8 md:grid-cols-3">
-              {STEPS.map((step, index) => (
-                <div key={step.title} className="flex flex-col items-center text-center">
-                  <div
-                    className={`flex h-10 w-10 items-center justify-center rounded-full font-heading font-semibold text-white ${step.color}`}
-                  >
-                    {index + 1}
-                  </div>
-                  <h3 className="mt-4 font-heading text-base font-semibold text-white">
-                    {step.title}
-                  </h3>
-                  <p className="mt-1.5 max-w-xs text-sm text-neutral-400">{step.description}</p>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-14 flex justify-center">
-              <Button onClick={goToApp}>{isAuthed ? 'Ir pra minha lista' : 'Criar minha conta'}</Button>
-            </div>
+        <section aria-labelledby="how-heading" className="flex flex-col gap-8">
+          <h2 id="how-heading" className="text-2xl font-extrabold tracking-tight">
+            Feito para quem assiste a dois
+          </h2>
+          <div className="grid gap-8 md:grid-cols-3">
+            {POINTS.map((point) => (
+              <div key={point.title} className="flex flex-col gap-2 border-t border-line pt-4">
+                <h3 className="font-bold">{point.title}</h3>
+                <p className="text-sm leading-relaxed text-fg-muted">{point.body}</p>
+              </div>
+            ))}
           </div>
         </section>
       </main>
 
-      <footer className="border-t border-surface-border">
-        <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-4 py-8 text-center md:flex-row md:justify-between md:text-left">
-          <div>
-            <Wordmark />
-            <p className="mt-1 text-xs text-neutral-500">Feito pra quem assiste séries a dois.</p>
-          </div>
-          <p className="text-xs text-neutral-500">© 2026 WatchMate. Feito com 🍿</p>
+      <footer className="border-t border-line">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-6">
+          <Wordmark className="h-7" />
+          <p className="text-xs text-fg-subtle">© 2026 WatchMate</p>
         </div>
       </footer>
     </div>

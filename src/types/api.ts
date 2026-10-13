@@ -5,6 +5,8 @@ export interface User {
   id: string;
   email: string;
   nome: string | null;
+  avatarEstilo: string | null;
+  avatarSemente: string | null;
   criadoEm: string;
 }
 
@@ -46,12 +48,19 @@ export interface SeasonSnapshot {
   totalEpisodios: number;
 }
 
+// JUNTOS: marcar um episódio marca para todos do grupo. SEPARADOS: só para quem marcou.
+export type WatchMode = 'JUNTOS' | 'SEPARADOS';
+
+// Sobrescreve o modo da série numa marcação específica.
+export type ProgressScope = 'me' | 'both';
+
 export interface TrackedSeries {
   id: string;
   grupoId: string;
   tmdbId: number;
   nome: string;
   posterPath: string | null;
+  modo: WatchMode;
   adicionadoEm: string;
   adicionadoPor: string | null;
   // Snapshot do TMDB no momento em que a série foi adicionada — não
@@ -68,13 +77,46 @@ export interface TrackedSeries {
   englishName: string | null;
 }
 
-export interface EpisodeProgress {
-  id: string;
-  serieAcompanhadaId: string;
+export interface EpisodePosition {
   temporada: number;
   episodio: number;
-  assistidoEm: string | null;
+}
+
+export interface MemberProgress {
+  usuarioId: string;
+  nome: string | null;
+  assistidos: number;
+  percentual: number | null;
+  posicaoAtual: EpisodePosition | null;
+  ultimoAssistidoEm: string | null;
+  // Episódios que esse membro viu e pelo menos um outro membro ainda não.
+  aFrente: number;
+}
+
+export interface EpisodeWatcher {
+  usuarioId: string;
+  assistidoEm: string;
+  // Marcado para o grupo todo de uma vez ("assistimos juntos").
+  juntos: boolean;
+  // Quem registrou: pode ser o parceiro, ao marcar para os dois.
   marcadoPor: string | null;
+}
+
+export interface EpisodeProgressEntry extends EpisodePosition {
+  assistidoPor: EpisodeWatcher[];
+}
+
+export interface SeriesProgress {
+  modo: WatchMode;
+  totalEpisodios: number;
+  membros: MemberProgress[];
+  // Episódios que todos os membros já viram.
+  emComum: {
+    assistidos: number;
+    percentual: number | null;
+    posicaoAtual: EpisodePosition | null;
+  };
+  episodios: EpisodeProgressEntry[];
 }
 
 export interface SeriesSearchResult {
@@ -99,27 +141,21 @@ export interface EpisodeUser {
   nome: string | null;
 }
 
-export interface EpisodeReaction {
-  emoji: string;
-  usuario: EpisodeUser;
-  atualizadoEm: string;
-}
+// Conteúdo do parceiro em episódio que você ainda não viu vem com `oculto: true`
+// e sem o conteúdo — a API esconde para não dar spoiler.
+type Spoilerable<Field extends string> =
+  ({ oculto: false } & Record<Field, string>) | ({ oculto: true } & Record<Field, null>);
 
-export interface EpisodeComment {
-  id: string;
-  texto: string;
-  usuario: EpisodeUser;
-  criadoEm: string;
-}
-
-export interface SeasonReaction {
+interface EpisodeContentBase {
   id: string;
   serieAcompanhadaId: string;
   temporada: number;
   episodio: number;
   usuarioId: string;
-  emoji: string;
   criadoEm: string;
-  atualizadoEm: string;
   usuario: EpisodeUser;
 }
+
+export type EpisodeReaction = EpisodeContentBase & { atualizadoEm: string } & Spoilerable<'emoji'>;
+
+export type EpisodeComment = EpisodeContentBase & Spoilerable<'texto'>;

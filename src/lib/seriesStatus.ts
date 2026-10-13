@@ -7,7 +7,7 @@ const STATUS_LABELS: Record<string, string> = {
   Pilot: 'Piloto',
 };
 
-export function StatusLabel({ status }: { status: string | null }) {
+export function statusLabel(status: string | null): string | null {
   if (!status) return null;
-  return <>{STATUS_LABELS[status] ?? status}</>;
+  return STATUS_LABELS[status] ?? status;
 }
