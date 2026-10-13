@@ -6,13 +6,13 @@ import { WatchBadge } from '@/components/episodes/WatchBadge';
 import { ActionSheet } from '@/components/ui/ActionSheet';
 import { IconButton } from '@/components/ui/IconButton';
 import { cx } from '@/lib/cx';
-import type { ProgressChoice, QuickToggle } from '@/lib/episodeActions';
+import type { ProgressChange, ProgressChoice, QuickToggle } from '@/lib/episodeActions';
 import type { Person } from '@/lib/people';
 import type { EpisodeWatchStatus } from '@/lib/progress';
 import { formatEpisodeCode } from '@/lib/progress';
 import { tmdbStillUrl } from '@/lib/tmdb';
 import { getWatchBadge } from '@/lib/watchBadge';
-import type { ProgressScope, SeasonEpisode } from '@/types/api';
+import type { SeasonEpisode } from '@/types/api';
 
 interface EpisodeRowProps {
   seriesId: string;
@@ -29,7 +29,7 @@ interface EpisodeRowProps {
   // Episódios que entraram no TMDB depois que a série foi adicionada não podem ser marcados.
   canMark: boolean;
   isPending: boolean;
-  onChange: (change: { watched: boolean; scope: ProgressScope }) => void;
+  onChange: (change: ProgressChange) => void;
 }
 
 function formatAirDate(iso: string | null): string | null {
@@ -67,9 +67,8 @@ export function EpisodeRow({
     .filter(Boolean)
     .join(' · ');
 
-  const toggleLabel = toggle.watched
-    ? `Marcar ${code} como visto${toggle.scope === 'both' ? ' pelos dois' : ''}`
-    : `Desmarcar ${code}${toggle.scope === 'both' ? ' para os dois' : ''}`;
+  // O check é sempre seu ("eu vi"); os dois / juntos ficam no ⋯ e no painel.
+  const toggleLabel = toggle.watched ? `Marcar que você viu ${code}` : `Desmarcar ${code} pra você`;
   // Quem viu (e se foi junto) fica na pílula. O check é neutro e só responde
   // "está marcado?", para não repetir nem contradizer as cores da pílula.
   const badge = getWatchBadge(status, me, partner);
@@ -117,7 +116,7 @@ export function EpisodeRow({
         <div className="flex shrink-0 items-center">
           <button
             type="button"
-            onClick={() => onChange({ watched: toggle.watched, scope: toggle.scope })}
+            onClick={() => onChange({ watched: toggle.watched, scope: 'me' })}
             disabled={!canMark || isPending}
             aria-pressed={toggle.checked}
             aria-label={toggleLabel}
@@ -126,7 +125,7 @@ export function EpisodeRow({
             <span
               className={cx(
                 'flex h-7 w-7 items-center justify-center rounded-full',
-                toggle.checked ? 'bg-fg text-canvas' : 'border-2 border-line',
+                toggle.checked ? 'bg-accent text-on-accent' : 'border-2 border-line',
               )}
             >
               {isPending ? (
@@ -141,10 +140,15 @@ export function EpisodeRow({
             <ActionSheet
               title={details?.titulo ? `${code} · ${details.titulo}` : code}
               items={choices.map((choice) => ({
-                key: `${choice.scope}-${choice.watched}`,
+                key: choice.label,
                 label: choice.label,
                 destructive: choice.destructive,
-                onSelect: () => onChange({ watched: choice.watched, scope: choice.scope }),
+                onSelect: () =>
+                  onChange({
+                    watched: choice.watched,
+                    scope: choice.scope,
+                    together: choice.together,
+                  }),
               }))}
               renderTrigger={(triggerProps) => (
                 <IconButton

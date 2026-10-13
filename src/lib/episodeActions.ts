@@ -1,18 +1,22 @@
-import type { EpisodeWatcher, ProgressScope, SeriesProgress, WatchMode } from '@/types/api';
+import type { EpisodeWatcher, ProgressScope, SeriesProgress } from '@/types/api';
 import type { EpisodeWatchStatus } from '@/lib/progress';
 
 export interface ProgressChoice {
   label: string;
   watched: boolean;
   scope: ProgressScope;
+  // Só nas marcações para os dois: se assistiram juntos ou cada um em outro momento.
+  together?: boolean;
   destructive?: boolean;
 }
+
+// O que uma marcação envia para a API.
+export type ProgressChange = Pick<ProgressChoice, 'watched' | 'scope' | 'together'>;
 
 interface ActionContext {
   meId: string;
   // Primeiro nome do par, ou null quando ninguém entrou no grupo ainda.
   partnerName: string | null;
-  mode: WatchMode;
 }
 
 // A API só apaga o progresso do parceiro quando foi você quem marcou ou quando foi
@@ -24,23 +28,17 @@ function canRemoveForPartner(watcher: EpisodeWatcher, meId: string): boolean {
 export interface QuickToggle {
   checked: boolean;
   watched: boolean;
-  scope: ProgressScope;
 }
 
-// O botão de check da linha do episódio. No modo JUNTOS ele representa "os dois
-// viram"; no SEPARADOS (ou sem par), "eu vi".
-export function getEpisodeQuickToggle(
-  status: EpisodeWatchStatus,
-  { partnerName, mode }: ActionContext,
-): QuickToggle {
-  if (partnerName && mode === 'JUNTOS') {
-    const checked = !!status.me && !!status.partner;
-    return { checked, watched: !checked, scope: 'both' };
-  }
+// O check da linha do episódio é sempre seu: "eu vi". Ele não pergunta nada; quem
+// viu junto ou em outro momento se resolve no ⋯ ou no botão "Assistimos juntos".
+export function getEpisodeQuickToggle(status: EpisodeWatchStatus): QuickToggle {
   const checked = !!status.me;
-  return { checked, watched: !checked, scope: 'me' };
+  return { checked, watched: !checked };
 }
 
+// Opções do ⋯ de um episódio. A pergunta "viram juntos?" só aparece quando é ambígua:
+// quando um dos dois já tinha marcado e o outro está sendo incluído agora.
 export function getEpisodeChoices(
   status: EpisodeWatchStatus,
   { meId, partnerName }: ActionContext,
@@ -54,16 +52,42 @@ export function getEpisodeChoices(
   }
 
   const choices: ProgressChoice[] = [];
+
   if (!me && !partner) {
-    choices.push({ label: 'Assistimos juntos', watched: true, scope: 'both' });
+    choices.push({ label: 'Assistimos juntos', watched: true, scope: 'both', together: true });
     choices.push({ label: 'Só eu assisti', watched: true, scope: 'me' });
   }
+
   if (me && !partner) {
-    choices.push({ label: `${partnerName} também assistiu`, watched: true, scope: 'both' });
+    choices.push({
+      label: `${partnerName} viu comigo`,
+      watched: true,
+      scope: 'both',
+      together: true,
+    });
+    choices.push({
+      label: `${partnerName} viu em outro momento`,
+      watched: true,
+      scope: 'both',
+      together: false,
+    });
   }
+
   if (!me && partner) {
-    choices.push({ label: 'Eu também assisti', watched: true, scope: 'me' });
+    choices.push({
+      label: `Vi junto com ${partnerName}`,
+      watched: true,
+      scope: 'both',
+      together: true,
+    });
+    choices.push({ label: 'Vi em outro momento', watched: true, scope: 'me' });
   }
+
+  // Os dois viram, mas não juntos: dá para corrigir.
+  if (me && partner && !(me.juntos && partner.juntos)) {
+    choices.push({ label: 'Vimos juntos', watched: true, scope: 'both', together: true });
+  }
+
   if (me) {
     choices.push({ label: 'Desmarcar pra mim', watched: false, scope: 'me', destructive: true });
   }
@@ -134,7 +158,12 @@ export function getSeasonChoices(
 
   const choices: ProgressChoice[] = [];
   if (!meComplete || !partnerComplete) {
-    choices.push({ label: 'Assistimos a temporada juntos', watched: true, scope: 'both' });
+    choices.push({
+      label: 'Assistimos a temporada juntos',
+      watched: true,
+      scope: 'both',
+      together: true,
+    });
   }
   if (!meComplete) {
     choices.push({ label: 'Eu assisti a temporada inteira', watched: true, scope: 'me' });

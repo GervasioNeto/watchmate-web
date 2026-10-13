@@ -33,7 +33,7 @@ const POINTS = [
   },
   {
     title: 'Viram juntos? Um toque marca os dois',
-    body: 'No modo Juntos, marcar um episódio vale para a dupla. Dá para trocar para Cada um em qualquer série.',
+    body: '“Assistimos juntos” marca o episódio para a dupla. Viu em outro momento? Marque só o seu.',
   },
   {
     title: 'Sem spoiler entre vocês',

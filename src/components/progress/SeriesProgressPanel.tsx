@@ -1,5 +1,4 @@
 import { CoupleProgress, type CoupleProgressRow } from '@/components/progress/CoupleProgress';
-import { WatchModeControl } from '@/components/progress/WatchModeControl';
 import { Button } from '@/components/ui/Button';
 import { useCouple } from '@/hooks/useCouple';
 import {
@@ -38,14 +37,13 @@ export function SeriesProgressPanel({ series, progress }: SeriesProgressPanelPro
   }
 
   const next = getNextPosition(meMember?.posicaoAtual ?? null, series.temporadas);
-  const primaryScope: ProgressScope = partner && series.modo === 'JUNTOS' ? 'both' : 'me';
-  const secondaryScope: ProgressScope = primaryScope === 'both' ? 'me' : 'both';
   const isNextPending =
     !!next && pending.some((action) => affectsEpisode(action, next.temporada, next.episodio));
 
   const catchUpCount = partnerMember?.aFrente ?? 0;
   const isCatchUpPending = pending.some((action) => action.kind === 'catch-up');
 
+  // "Assistimos juntos" já responde a pergunta: marca para os dois, como juntos.
   function markNext(scope: ProgressScope) {
     if (!next) return;
     updateProgress.mutate({
@@ -54,6 +52,7 @@ export function SeriesProgressPanel({ series, progress }: SeriesProgressPanelPro
       episode: next.episodio,
       watched: true,
       scope,
+      together: scope === 'both' ? true : undefined,
     });
   }
 
@@ -69,24 +68,18 @@ export function SeriesProgressPanel({ series, progress }: SeriesProgressPanelPro
           : undefined
       }
     >
-      {partner && <WatchModeControl seriesId={series.id} mode={series.modo} />}
-
       {next ? (
         <div className="flex flex-wrap gap-2">
           <Button
-            onClick={() => markNext(primaryScope)}
+            onClick={() => markNext(partner ? 'both' : 'me')}
             isLoading={isNextPending}
             className="min-w-0 flex-1 sm:flex-none"
           >
-            {`${primaryScope === 'both' ? 'Assistimos o' : 'Assisti o'} ${formatEpisodeCode(next)}`}
+            {`${partner ? 'Assistimos juntos o' : 'Assisti o'} ${formatEpisodeCode(next)}`}
           </Button>
           {partner && (
-            <Button
-              variant="secondary"
-              onClick={() => markNext(secondaryScope)}
-              disabled={isNextPending}
-            >
-              {secondaryScope === 'me' ? 'Só eu' : 'Nós dois'}
+            <Button variant="secondary" onClick={() => markNext('me')} disabled={isNextPending}>
+              Só eu
             </Button>
           )}
         </div>

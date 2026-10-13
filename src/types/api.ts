@@ -54,10 +54,11 @@ export interface SeasonSnapshot {
   totalEpisodios: number;
 }
 
-// JUNTOS: marcar um episódio marca para todos do grupo. SEPARADOS: só para quem marcou.
+// Modo da série, ainda devolvido pela API. O app não usa mais: toda marcação diz
+// para quem vale (`ProgressScope`).
 export type WatchMode = 'JUNTOS' | 'SEPARADOS';
 
-// Sobrescreve o modo da série numa marcação específica.
+// Para quem vale uma marcação: só você ou os dois.
 export type ProgressScope = 'me' | 'both';
 
 export interface TrackedSeries {

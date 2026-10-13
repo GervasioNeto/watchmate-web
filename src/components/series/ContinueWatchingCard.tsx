@@ -10,7 +10,7 @@ import {
 import { subjectName } from '@/lib/people';
 import { formatEpisodeCode, getMember, getNextPosition } from '@/lib/progress';
 import { tmdbPosterUrl } from '@/lib/tmdb';
-import type { SeriesProgress, TrackedSeries } from '@/types/api';
+import type { ProgressScope, SeriesProgress, TrackedSeries } from '@/types/api';
 
 interface ContinueWatchingCardProps {
   series: TrackedSeries;
@@ -26,10 +26,22 @@ export function ContinueWatchingCard({ series, progress }: ContinueWatchingCardP
 
   const people = [me, partner].filter((person) => person !== null);
   const next = getNextPosition(getMember(progress, me.id)?.posicaoAtual ?? null, series.temporadas);
-  const together = !!partner && series.modo === 'JUNTOS';
   const isNextPending =
     !!next && pending.some((action) => affectsEpisode(action, next.temporada, next.episodio));
   const posterUrl = tmdbPosterUrl(series.posterPath, 'w185');
+
+  // Mesmos botões do painel da série: "Assistimos juntos" marca os dois como juntos.
+  function markNext(scope: ProgressScope) {
+    if (!next) return;
+    updateProgress.mutate({
+      kind: 'episode',
+      season: next.temporada,
+      episode: next.episodio,
+      watched: true,
+      scope,
+      together: scope === 'both' ? true : undefined,
+    });
+  }
 
   return (
     <section aria-labelledby="continue-heading" className="flex flex-col gap-3">
@@ -64,21 +76,20 @@ export function ContinueWatchingCard({ series, progress }: ContinueWatchingCardP
         </Link>
 
         {next && (
-          <Button
-            onClick={() =>
-              updateProgress.mutate({
-                kind: 'episode',
-                season: next.temporada,
-                episode: next.episodio,
-                watched: true,
-                scope: together ? 'both' : 'me',
-              })
-            }
-            isLoading={isNextPending}
-            className="w-full sm:w-auto"
-          >
-            {`${together ? 'Assistimos o' : 'Assisti o'} ${formatEpisodeCode(next)}`}
-          </Button>
+          <div className="flex w-full gap-2 sm:w-auto">
+            <Button
+              onClick={() => markNext(partner ? 'both' : 'me')}
+              isLoading={isNextPending}
+              className="min-w-0 flex-1"
+            >
+              {`${partner ? 'Assistimos juntos o' : 'Assisti o'} ${formatEpisodeCode(next)}`}
+            </Button>
+            {partner && (
+              <Button variant="secondary" onClick={() => markNext('me')} disabled={isNextPending}>
+                Só eu
+              </Button>
+            )}
+          </div>
         )}
       </div>
     </section>

@@ -50,7 +50,7 @@ export function EpisodesSection({ series, progress }: EpisodesSectionProps) {
   if (!me) return null;
 
   const total = getSeasonTotal(series.temporadas, season) ?? 0;
-  const context = { meId: me.id, partnerName: partner?.shortName ?? null, mode: series.modo };
+  const context = { meId: me.id, partnerName: partner?.shortName ?? null };
 
   // A lista do TMDB pode ter episódios novos; sem ela, usamos o total salvo na série.
   const numbers =
@@ -83,7 +83,7 @@ export function EpisodesSection({ series, progress }: EpisodesSectionProps) {
                 : `Você viu ${seasonStatus.mine} de ${total}.`
             }
             items={seasonChoices.map((choice) => ({
-              key: `${choice.scope}-${choice.watched}`,
+              key: choice.label,
               label: choice.label,
               destructive: choice.destructive,
               onSelect: () =>
@@ -92,6 +92,7 @@ export function EpisodesSection({ series, progress }: EpisodesSectionProps) {
                   season,
                   watched: choice.watched,
                   scope: choice.scope,
+                  together: choice.together,
                 }),
             }))}
             renderTrigger={(triggerProps) => (
@@ -168,20 +169,14 @@ export function EpisodesSection({ series, progress }: EpisodesSectionProps) {
                 number={number}
                 details={detailsByNumber.get(number)}
                 status={status}
-                toggle={getEpisodeQuickToggle(status, context)}
+                toggle={getEpisodeQuickToggle(status)}
                 choices={getEpisodeChoices(status, context)}
                 me={me}
                 partner={partner}
                 canMark={number >= 1 && number <= total}
                 isPending={pending.some((action) => affectsEpisode(action, season, number))}
-                onChange={({ watched, scope }) =>
-                  updateProgress.mutate({
-                    kind: 'episode',
-                    season,
-                    episode: number,
-                    watched,
-                    scope,
-                  })
+                onChange={(change) =>
+                  updateProgress.mutate({ kind: 'episode', season, episode: number, ...change })
                 }
               />
             );
