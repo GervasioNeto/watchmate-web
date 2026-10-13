@@ -4,6 +4,7 @@ import { EpisodeRow } from '@/components/episodes/EpisodeRow';
 import { SeasonRetrospective } from '@/components/episodes/SeasonRetrospective';
 import { ActionSheet } from '@/components/ui/ActionSheet';
 import { Button } from '@/components/ui/Button';
+import { ChipGroup } from '@/components/ui/ChipGroup';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useCouple } from '@/hooks/useCouple';
 import { useSeasonEpisodes } from '@/hooks/useSeasonEpisodes';
@@ -12,7 +13,6 @@ import {
   usePendingProgressActions,
   useUpdateProgress,
 } from '@/hooks/useSeriesProgress';
-import { cx } from '@/lib/cx';
 import {
   getEpisodeChoices,
   getEpisodeQuickToggle,
@@ -106,29 +106,16 @@ export function EpisodesSection({ series, progress }: EpisodesSectionProps) {
       </div>
 
       {seasons.length > 1 && (
-        <div
-          role="group"
-          aria-label="Temporada"
-          className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 [scrollbar-width:none]"
-        >
-          {seasons.map((entry) => {
-            const selected = entry.numero === season;
-            return (
-              <button
-                key={entry.numero}
-                type="button"
-                aria-pressed={selected}
-                onClick={() => setSeasonOverride(entry.numero)}
-                className={cx(
-                  'min-h-9 shrink-0 rounded-md px-3 text-sm font-semibold transition-colors',
-                  selected ? 'bg-fg text-canvas' : 'bg-surface-2 text-fg-muted hover:text-fg',
-                )}
-              >
-                {entry.numero === 0 ? 'Especiais' : `T${entry.numero}`}
-              </button>
-            );
-          })}
-        </div>
+        <ChipGroup
+          label="Temporada"
+          options={seasons.map((entry) => ({
+            value: String(entry.numero),
+            label: entry.numero === 0 ? 'Especiais' : `T${entry.numero}`,
+          }))}
+          value={String(season)}
+          onChange={(value) => setSeasonOverride(Number(value))}
+          className="-mx-4 px-4 pb-1"
+        />
       )}
 
       {updateProgress.isError && (

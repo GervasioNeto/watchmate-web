@@ -1,4 +1,4 @@
-import { useRef, type KeyboardEvent } from 'react';
+import { useRadioGroup } from '@/hooks/useRadioGroup';
 import { cx } from '@/lib/cx';
 
 interface Option<T extends string> {
@@ -15,7 +15,7 @@ interface SegmentedControlProps<T extends string> {
   className?: string;
 }
 
-// Grupo de rádio com navegação por setas, como pede o padrão de acessibilidade.
+// Duas ou três opções que dividem a largura (ex.: Entrar / Criar conta).
 export function SegmentedControl<T extends string>({
   label,
   options,
@@ -24,48 +24,33 @@ export function SegmentedControl<T extends string>({
   disabled,
   className,
 }: SegmentedControlProps<T>) {
-  const buttonsRef = useRef<Array<HTMLButtonElement | null>>([]);
-
-  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-    const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
-    if (!step) return;
-    event.preventDefault();
-    const current = options.findIndex((option) => option.value === value);
-    const next = (current + step + options.length) % options.length;
-    onChange(options[next].value);
-    buttonsRef.current[next]?.focus();
-  }
+  const { groupProps, itemProps } = useRadioGroup(
+    options.map((option) => option.value),
+    value,
+    onChange,
+  );
 
   return (
     <div
-      role="radiogroup"
+      {...groupProps}
       aria-label={label}
-      onKeyDown={handleKeyDown}
       className={cx('flex rounded-md bg-surface-2 p-1', className)}
     >
-      {options.map((option, index) => {
-        const selected = option.value === value;
-        return (
-          <button
-            key={option.value}
-            ref={(element) => {
-              buttonsRef.current[index] = element;
-            }}
-            type="button"
-            role="radio"
-            aria-checked={selected}
-            tabIndex={selected ? 0 : -1}
-            disabled={disabled}
-            onClick={() => onChange(option.value)}
-            className={cx(
-              'min-h-9 flex-1 rounded-sm px-3 text-sm font-semibold transition-colors disabled:cursor-not-allowed',
-              selected ? 'bg-canvas text-fg' : 'text-fg-muted hover:text-fg',
-            )}
-          >
-            {option.label}
-          </button>
-        );
-      })}
+      {options.map((option, index) => (
+        <button
+          key={option.value}
+          {...itemProps(index)}
+          type="button"
+          disabled={disabled}
+          onClick={() => onChange(option.value)}
+          className={cx(
+            'min-h-9 flex-1 rounded-sm px-3 text-sm font-semibold transition-colors disabled:cursor-not-allowed',
+            option.value === value ? 'bg-canvas text-fg' : 'text-fg-muted hover:text-fg',
+          )}
+        >
+          {option.label}
+        </button>
+      ))}
     </div>
   );
 }

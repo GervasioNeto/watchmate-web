@@ -3,7 +3,7 @@ import { Plus } from 'lucide-react';
 import { AppHeader } from '@/components/AppHeader';
 import { InviteCode } from '@/components/InviteCode';
 import { ContinueWatchingCard } from '@/components/series/ContinueWatchingCard';
-import { SeriesCard } from '@/components/series/SeriesCard';
+import { SERIES_GRID, SeriesLibrary } from '@/components/series/SeriesLibrary';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -12,8 +12,7 @@ import { useGroup } from '@/hooks/useGroup';
 import { useSeries } from '@/hooks/useSeries';
 import { useSeriesProgressList } from '@/hooks/useSeriesProgress';
 import { getLastActivityAt, isInProgress } from '@/lib/progress';
-
-const GRID = 'grid grid-cols-3 gap-x-3 gap-y-5 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6';
+import type { ListEntry } from '@/lib/seriesFilters';
 
 export function MyListPage() {
   const navigate = useNavigate();
@@ -26,10 +25,11 @@ export function MyListPage() {
     return <Navigate to="/onboarding" replace />;
   }
 
-  const entries = (series ?? []).map((item, index) => ({
+  const entries: ListEntry[] = (series ?? []).map((item, index) => ({
     series: item,
     progress: progressQueries[index]?.data,
   }));
+  const isProgressLoading = progressQueries.some((query) => query.isPending);
 
   // A série em andamento com a marcação mais recente de qualquer um dos dois.
   const continueWatching = entries
@@ -72,7 +72,7 @@ export function MyListPage() {
         {isSeriesLoading ? (
           <div className="flex flex-col gap-8" aria-label="Carregando séries">
             <Skeleton className="h-36 rounded-lg" />
-            <div className={GRID}>
+            <div className={SERIES_GRID}>
               {Array.from({ length: 6 }).map((_, index) => (
                 <Skeleton key={index} className="aspect-2/3 rounded-md" />
               ))}
@@ -86,20 +86,7 @@ export function MyListPage() {
                 progress={continueWatching.progress}
               />
             )}
-            <section aria-labelledby="all-series-heading" className="flex flex-col gap-3">
-              <h2 id="all-series-heading" className="text-sm font-semibold text-fg-muted">
-                Todas as séries · {entries.length}
-              </h2>
-              <div className={GRID}>
-                {entries.map((entry) => (
-                  <SeriesCard
-                    key={entry.series.id}
-                    series={entry.series}
-                    progress={entry.progress}
-                  />
-                ))}
-              </div>
-            </section>
+            <SeriesLibrary entries={entries} isProgressLoading={isProgressLoading} />
           </>
         ) : (
           <section className="flex flex-col items-start gap-3 rounded-lg border border-line p-5">
