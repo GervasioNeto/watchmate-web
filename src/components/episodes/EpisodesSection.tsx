@@ -170,7 +170,8 @@ export function EpisodesSection({ series, progress }: EpisodesSectionProps) {
                 status={status}
                 toggle={getEpisodeQuickToggle(status, context)}
                 choices={getEpisodeChoices(status, context)}
-                partnerName={context.partnerName}
+                me={me}
+                partner={partner}
                 canMark={number >= 1 && number <= total}
                 isPending={pending.some((action) => affectsEpisode(action, season, number))}
                 onChange={({ watched, scope }) =>

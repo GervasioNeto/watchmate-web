@@ -4,6 +4,7 @@ import { useCouple } from '@/hooks/useCouple';
 import { useEpisodeReactions, useSetEpisodeReaction } from '@/hooks/useEpisodeReactions';
 import { cx } from '@/lib/cx';
 import { subjectName } from '@/lib/people';
+import { TONE_CLASSES } from '@/lib/personTone';
 import { getReactionSummary } from '@/lib/reactionSummary';
 
 const REACTION_EMOJIS = ['❤️', '😂', '😐', '😮', '😢', '🔥'];
@@ -45,7 +46,9 @@ export function EpisodeReactions({ seriesId, season, episode, enabled }: Episode
               aria-pressed={selected}
               className={cx(
                 'flex h-10 w-10 items-center justify-center rounded-md text-lg transition-colors',
-                selected ? 'bg-surface-2 ring-1 ring-me' : 'hover:bg-surface-2',
+                selected
+                  ? cx('bg-surface-2 ring-1', me && TONE_CLASSES[me.tone].ring)
+                  : 'hover:bg-surface-2',
               )}
             >
               {emoji}

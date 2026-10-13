@@ -1,11 +1,15 @@
 import { isAvatarStyle, type AvatarStyleId } from '@/lib/avatarStyles';
-import type { AvatarFields, Me } from '@/types/api';
+import type { PersonTone } from '@/lib/personTone';
+import type { AvatarFields, GroupMemberSummary, Me } from '@/types/api';
 
+// Como a pessoa é chamada ("Você" ou o nome). Depende de quem está olhando.
 export type PersonRole = 'me' | 'partner';
 
 export interface Person {
   id: string;
   role: PersonRole;
+  // Cor da pessoa. Não depende de quem está olhando: é a mesma nos dois celulares.
+  tone: PersonTone;
   // Nome completo para exibir; nunca vazio.
   name: string;
   // Primeiro nome, para espaços curtos ("Larissa está 2 à frente").
@@ -34,9 +38,21 @@ export function displayName(
   return emailName || fallback;
 }
 
+// Quem entrou primeiro no grupo (normalmente quem criou) fica com a cor `one`, o
+// outro com `two`. O id desempata, para os dois celulares chegarem sempre no mesmo resultado.
+function toneByJoinOrder(members: GroupMemberSummary[]): (userId: string) => PersonTone {
+  const order = [...members]
+    .sort(
+      (a, b) => a.entrouEm.localeCompare(b.entrouEm) || a.usuario.id.localeCompare(b.usuario.id),
+    )
+    .map((member) => member.usuario.id);
+  return (userId) => (order.indexOf(userId) === 1 ? 'two' : 'one');
+}
+
 function toPerson(
   user: AvatarFields & { id: string; nome: string | null; email?: string | null },
   role: PersonRole,
+  tone: PersonTone,
 ): Person {
   const name = displayName(user, role === 'me' ? ME_FALLBACK : PARTNER_FALLBACK);
   // Estilos que o app não conhece mais (removidos do registro) caem na inicial.
@@ -47,6 +63,7 @@ function toPerson(
   return {
     id: user.id,
     role,
+    tone,
     name,
     shortName: name.split(/\s+/)[0] ?? name,
     initial: name.charAt(0).toUpperCase(),
@@ -55,11 +72,14 @@ function toPerson(
 }
 
 export function buildCouple(me: Me | undefined): Couple {
-  const mePerson = me ? toPerson(me, 'me') : null;
+  const members = me?.membroDoGrupo?.grupo.membros ?? [];
+  const toneOf = toneByJoinOrder(members);
+
+  const mePerson = me ? toPerson(me, 'me', toneOf(me.id)) : null;
   const partnerUser = me
-    ? me.membroDoGrupo?.grupo.membros.find((member) => member.usuario.id !== me.id)?.usuario
+    ? members.find((member) => member.usuario.id !== me.id)?.usuario
     : undefined;
-  const partner = partnerUser ? toPerson(partnerUser, 'partner') : null;
+  const partner = partnerUser ? toPerson(partnerUser, 'partner', toneOf(partnerUser.id)) : null;
 
   return {
     me: mePerson,

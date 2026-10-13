@@ -28,7 +28,8 @@ export function usePatchMe() {
 }
 
 // Atualiza tanto o topo do /me quanto a própria entrada em
-// membroDoGrupo.grupo.membros, para o cache ficar consistente.
+// membroDoGrupo.grupo.membros, para o cache ficar consistente. A entrada do membro é
+// preservada inteira: o `entrouEm` dela define a cor da pessoa.
 function withAvatar(me: Me, avatar: AvatarFields): Me {
   const grupo = me.membroDoGrupo?.grupo;
   return {
@@ -39,7 +40,9 @@ function withAvatar(me: Me, avatar: AvatarFields): Me {
           grupo: {
             ...grupo,
             membros: grupo.membros.map((member) =>
-              member.usuario.id === me.id ? { usuario: { ...member.usuario, ...avatar } } : member,
+              member.usuario.id === me.id
+                ? { ...member, usuario: { ...member.usuario, ...avatar } }
+                : member,
             ),
           },
         }

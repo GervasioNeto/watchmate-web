@@ -2,13 +2,16 @@ import { useId, useState } from 'react';
 import { Check, ChevronDown, Ellipsis, LoaderCircle } from 'lucide-react';
 import { EpisodeComments } from '@/components/episodes/EpisodeComments';
 import { EpisodeReactions } from '@/components/episodes/EpisodeReactions';
+import { WatchBadge } from '@/components/episodes/WatchBadge';
 import { ActionSheet } from '@/components/ui/ActionSheet';
 import { IconButton } from '@/components/ui/IconButton';
 import { cx } from '@/lib/cx';
 import type { ProgressChoice, QuickToggle } from '@/lib/episodeActions';
+import type { Person } from '@/lib/people';
 import type { EpisodeWatchStatus } from '@/lib/progress';
 import { formatEpisodeCode } from '@/lib/progress';
 import { tmdbStillUrl } from '@/lib/tmdb';
+import { getWatchBadge } from '@/lib/watchBadge';
 import type { ProgressScope, SeasonEpisode } from '@/types/api';
 
 interface EpisodeRowProps {
@@ -20,7 +23,9 @@ interface EpisodeRowProps {
   status: EpisodeWatchStatus;
   toggle: QuickToggle;
   choices: ProgressChoice[];
-  partnerName: string | null;
+  me: Person;
+  // null enquanto ninguém entrou no grupo.
+  partner: Person | null;
   // Episódios que entraram no TMDB depois que a série foi adicionada não podem ser marcados.
   canMark: boolean;
   isPending: boolean;
@@ -36,25 +41,6 @@ function formatAirDate(iso: string | null): string | null {
   });
 }
 
-function WatchedBy({ status, partnerName }: Pick<EpisodeRowProps, 'status' | 'partnerName'>) {
-  if (!partnerName) return null;
-  const { me, partner } = status;
-  if (me && partner) {
-    const together = me.juntos && partner.juntos;
-    return (
-      <span className="flex items-center gap-1.5 text-xs text-fg-muted">
-        {together && <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-together" />}
-        {together ? 'Vocês viram juntos' : 'Os dois viram'}
-      </span>
-    );
-  }
-  if (me) return <span className="text-xs font-semibold text-me">Só você viu</span>;
-  if (partner) {
-    return <span className="text-xs font-semibold text-partner">Só {partnerName} viu</span>;
-  }
-  return null;
-}
-
 export function EpisodeRow({
   seriesId,
   season,
@@ -63,7 +49,8 @@ export function EpisodeRow({
   status,
   toggle,
   choices,
-  partnerName,
+  me,
+  partner,
   canMark,
   isPending,
   onChange,
@@ -83,15 +70,9 @@ export function EpisodeRow({
   const toggleLabel = toggle.watched
     ? `Marcar ${code} como visto${toggle.scope === 'both' ? ' pelos dois' : ''}`
     : `Desmarcar ${code}${toggle.scope === 'both' ? ' para os dois' : ''}`;
-  const checkedTone =
-    toggle.scope === 'both' ? 'bg-together text-on-together' : 'bg-me text-canvas';
-  // Desmarcado, mas uma das pessoas já viu: a borda ganha a cor de quem viu.
-  const uncheckedTone =
-    status.me && !status.partner
-      ? 'border-2 border-me'
-      : status.partner && !status.me
-        ? 'border-2 border-partner'
-        : 'border-2 border-line';
+  // Quem viu (e se foi junto) fica na pílula. O check é neutro e só responde
+  // "está marcado?", para não repetir nem contradizer as cores da pílula.
+  const badge = getWatchBadge(status, me, partner);
 
   return (
     <li className="border-b border-line py-3 last:border-b-0">
@@ -113,12 +94,16 @@ export function EpisodeRow({
           aria-controls={expanded ? detailsId : undefined}
           className="flex min-w-0 flex-1 flex-col items-start gap-0.5 text-left"
         >
-          <span className="text-xs font-semibold text-fg-subtle tabular-nums">{code}</span>
+          <span className="flex max-w-full items-center gap-2">
+            <span className="shrink-0 text-xs font-semibold text-fg-subtle tabular-nums">
+              {code}
+            </span>
+            {badge && <WatchBadge badge={badge} />}
+          </span>
           <span className="line-clamp-2 text-sm font-semibold">
             {details?.titulo ?? `Episódio ${number}`}
           </span>
           {metaLine && <span className="text-xs text-fg-subtle">{metaLine}</span>}
-          <WatchedBy status={status} partnerName={partnerName} />
           <span className="mt-0.5 flex items-center gap-1 text-xs text-fg-muted">
             {expanded ? 'Fechar' : 'Detalhes'}
             <ChevronDown
@@ -141,7 +126,7 @@ export function EpisodeRow({
             <span
               className={cx(
                 'flex h-7 w-7 items-center justify-center rounded-full',
-                toggle.checked ? checkedTone : uncheckedTone,
+                toggle.checked ? 'bg-fg text-canvas' : 'border-2 border-line',
               )}
             >
               {isPending ? (

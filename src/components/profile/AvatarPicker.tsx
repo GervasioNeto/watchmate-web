@@ -11,6 +11,7 @@ import {
   type AvatarStyleId,
 } from '@/lib/avatarStyles';
 import type { Person } from '@/lib/people';
+import { TONE_CLASSES, type PersonTone } from '@/lib/personTone';
 
 const OPTION_COUNT = 8;
 
@@ -27,10 +28,12 @@ interface AvatarOptionProps {
   seed: string;
   index: number;
   selected: boolean;
+  // A seleção usa a cor de quem está escolhendo.
+  tone: PersonTone;
   onPick: () => void;
 }
 
-function AvatarOption({ style, seed, index, selected, onPick }: AvatarOptionProps) {
+function AvatarOption({ style, seed, index, selected, tone, onPick }: AvatarOptionProps) {
   const image = useAvatarImage({ style, seed });
   return (
     <button
@@ -41,7 +44,7 @@ function AvatarOption({ style, seed, index, selected, onPick }: AvatarOptionProp
       className={cx(
         'aspect-square overflow-hidden rounded-full bg-surface-2 transition-shadow',
         selected
-          ? 'ring-2 ring-me ring-offset-2 ring-offset-surface'
+          ? cx('ring-2 ring-offset-2 ring-offset-surface', TONE_CLASSES[tone].ring)
           : 'hover:ring-2 hover:ring-line',
       )}
     >
@@ -97,6 +100,7 @@ export function AvatarPicker({ me }: { me: Person }) {
             seed={seed}
             index={index}
             selected={seed === currentSeed}
+            tone={me.tone}
             onPick={() => updateAvatar.mutate({ estilo: style, semente: seed })}
           />
         ))}

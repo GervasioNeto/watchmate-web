@@ -16,10 +16,7 @@ export function SeasonRetrospective({ seriesId, season }: SeasonRetrospectivePro
 
   return (
     <section className="rounded-lg border border-line p-4">
-      <h3 className="flex items-center gap-2 text-base font-bold">
-        <span aria-hidden className="h-2 w-2 rounded-full bg-together" />
-        Temporada {season} de vocês
-      </h3>
+      <h3 className="text-base font-bold">Temporada {season} de vocês</h3>
       <p className="mt-0.5 text-sm text-fg-muted">Os dois terminaram essa temporada.</p>
 
       {isLoading ? (

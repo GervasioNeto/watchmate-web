@@ -10,6 +10,7 @@ import type { Person } from '@/lib/people';
 const DEMO_ME: Person = {
   id: 'demo-me',
   role: 'me',
+  tone: 'one',
   name: 'Você',
   shortName: 'Você',
   initial: 'V',
@@ -18,6 +19,7 @@ const DEMO_ME: Person = {
 const DEMO_PARTNER: Person = {
   id: 'demo-partner',
   role: 'partner',
+  tone: 'two',
   name: 'Rafa',
   shortName: 'Rafa',
   initial: 'R',

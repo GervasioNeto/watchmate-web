@@ -49,7 +49,7 @@ export function SeriesCard({ series, progress }: SeriesCardProps) {
           <ProgressBar
             key={person.id}
             value={progress ? (getMember(progress, person.id)?.percentual ?? 0) : 0}
-            tone={person.role}
+            tone={person.tone}
             label={`Progresso de ${subjectName(person)}`}
             size="sm"
           />

@@ -1,6 +1,7 @@
 import { useAvatarImage } from '@/hooks/useAvatarImage';
 import { cx } from '@/lib/cx';
 import type { Person } from '@/lib/people';
+import { TONE_CLASSES } from '@/lib/personTone';
 
 type Size = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
@@ -12,11 +13,6 @@ const sizeClasses: Record<Size, string> = {
   xl: 'h-24 w-24 text-4xl',
 };
 
-const roleClasses = {
-  me: 'bg-me-soft text-on-me-soft',
-  partner: 'bg-partner-soft text-on-partner-soft',
-};
-
 interface AvatarProps {
   // null desenha o lugar vazio de quem ainda não entrou no grupo.
   person: Person | null;
@@ -25,7 +21,7 @@ interface AvatarProps {
 }
 
 // Mostra o avatar do DiceBear escolhido no perfil ou, sem ele, a inicial.
-// O fundo segue o papel da pessoa: você é sempre roxo e o seu par sempre rosa.
+// O fundo segue a cor fixa da pessoa, a mesma nos dois celulares.
 export function Avatar({ person, size = 'md', className }: AvatarProps) {
   const image = useAvatarImage(person?.avatar ?? null);
 
@@ -48,7 +44,7 @@ export function Avatar({ person, size = 'md', className }: AvatarProps) {
       aria-hidden
       className={cx(
         'inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full font-bold',
-        roleClasses[person.role],
+        TONE_CLASSES[person.tone].soft,
         sizeClasses[size],
         className,
       )}

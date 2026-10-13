@@ -8,11 +8,14 @@
  * nenhum aqui — use os tokens semânticos.
  *
  * As cinco cores da marca continuam todas, cada uma com um trabalho:
- *   flame        → accent        (ações)
- *   ultramarine  → me-soft       (você; clareada em `me` para aparecer no escuro)
- *   fuchsia      → partner       (seu par; suavizada para não brigar com o laranja)
- *   raspberry    → partner-soft  (fundo da família do par)
- *   amber        → together      (o que vocês viram juntos)
+ *   flame        → accent          (ações)
+ *   ultramarine  → person-1-soft   (a primeira pessoa do grupo; clareada em `person-1`)
+ *   amber        → person-2        (a segunda pessoa do grupo)
+ *   fuchsia      → together        (o que vocês viram juntos; suavizada para não brigar com o laranja)
+ *   raspberry    → together-soft   (fundo da família do "juntos")
+ *
+ * As cores de pessoa são fixas por pessoa (ordem de entrada no grupo), iguais nos dois
+ * celulares. Componentes não usam esses tokens direto: passam por lib/personTone.ts.
  */
 @theme {
   --color-*: initial;
@@ -33,19 +36,20 @@
   --color-accent-hover: #ff6a21;
   --color-on-accent: #160a03;
 
-  /* Você (ultramarine) */
-  --color-me: #9d68f3;
-  --color-me-soft: #390099;
-  --color-on-me-soft: #ddd0ff;
+  /* Primeira pessoa do grupo (ultramarine) */
+  --color-person-1: #9d68f3;
+  --color-person-1-soft: #390099;
+  --color-on-person-1-soft: #ddd0ff;
 
-  /* Seu par (fuchsia + raspberry) */
-  --color-partner: #ff3d77;
-  --color-partner-soft: #9e0059;
-  --color-on-partner-soft: #ffd3e0;
+  /* Segunda pessoa do grupo (amber) */
+  --color-person-2: #ffbd00;
+  --color-person-2-soft: #4d3a00;
+  --color-on-person-2-soft: #ffe7a3;
 
-  /* Juntos (amber) */
-  --color-together: #ffbd00;
-  --color-on-together: #1a1405;
+  /* Juntos (fuchsia + raspberry) */
+  --color-together: #ff3d77;
+  --color-together-soft: #9e0059;
+  --color-on-together: #1f0710;
 
   /* Estados */
   --color-danger: #ff6b6b;

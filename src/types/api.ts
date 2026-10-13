@@ -30,6 +30,8 @@ export interface Group {
 }
 
 export interface GroupMemberSummary {
+  // Ordem de entrada no grupo: define a cor fixa de cada pessoa (ver buildCouple).
+  entrouEm: string;
   usuario: AvatarFields & {
     id: string;
     nome: string | null;

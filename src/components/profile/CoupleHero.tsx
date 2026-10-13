@@ -6,6 +6,7 @@ import { useCoupleStats } from '@/hooks/useCoupleStats';
 import { pluralEpisodes } from '@/lib/coupleSummary';
 import { cx } from '@/lib/cx';
 import type { Person } from '@/lib/people';
+import { TONE_CLASSES } from '@/lib/personTone';
 
 interface CoupleHeroProps {
   me: Person;
@@ -95,12 +96,16 @@ export function CoupleHero({ me, partner, groupName, since, inviteCode }: Couple
       {partner ? (
         <div className="flex w-full flex-col gap-4 border-t border-line pt-5">
           <div className="grid grid-cols-3 items-end gap-2">
-            <Score value={stats?.mine ?? null} label="você viu" dotClass="bg-me" />
+            <Score
+              value={stats?.mine ?? null}
+              label="você viu"
+              dotClass={TONE_CLASSES[me.tone].solid}
+            />
             <Score value={stats?.together ?? null} label="juntos" dotClass="bg-together" emphasis />
             <Score
               value={stats?.partners ?? null}
               label={`${partner.shortName} viu`}
-              dotClass="bg-partner"
+              dotClass={TONE_CLASSES[partner.tone].solid}
             />
           </div>
           <p className="text-xs text-fg-subtle">

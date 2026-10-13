@@ -1,13 +1,14 @@
 import { cx } from '@/lib/cx';
+import { TONE_CLASSES, type PersonTone } from '@/lib/personTone';
 
-type Tone = 'me' | 'partner' | 'together' | 'accent';
+// Tom de uma pessoa da dupla, ou um dos tons de interface.
+type Tone = PersonTone | 'together' | 'accent';
 
-const toneClasses: Record<Tone, string> = {
-  me: 'bg-me',
-  partner: 'bg-partner',
-  together: 'bg-together',
-  accent: 'bg-accent',
-};
+function fillClass(tone: Tone): string {
+  if (tone === 'together') return 'bg-together';
+  if (tone === 'accent') return 'bg-accent';
+  return TONE_CLASSES[tone].solid;
+}
 
 interface ProgressBarProps {
   // 0 a 100.
@@ -34,7 +35,7 @@ export function ProgressBar({ value, tone, label, size = 'md', className }: Prog
       )}
     >
       <div
-        className={cx('h-full rounded-full transition-[width] duration-300', toneClasses[tone])}
+        className={cx('h-full rounded-full transition-[width] duration-300', fillClass(tone))}
         style={{ width: `${clamped}%` }}
       />
     </div>

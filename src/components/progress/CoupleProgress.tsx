@@ -40,7 +40,7 @@ export function CoupleProgress({ rows, common, children, className }: CoupleProg
               </div>
               <ProgressBar
                 value={percent}
-                tone={person.role}
+                tone={person.tone}
                 label={`Progresso de ${subjectName(person)}`}
               />
             </div>
@@ -50,13 +50,13 @@ export function CoupleProgress({ rows, common, children, className }: CoupleProg
 
       {common && (
         <div className="flex flex-col gap-0.5 border-t border-line pt-3">
-          <p className="flex items-center gap-2 text-sm font-semibold">
-            <span aria-hidden className="h-2 w-2 shrink-0 rounded-full bg-together" />
+          {/* Sem cor: "em comum" conta o que os dois viram, juntos ou não. O rosa é só do "juntos". */}
+          <p className="text-sm font-semibold">
             {common.position
               ? `Em comum até ${formatEpisodeCode(common.position)}`
               : 'Nada em comum ainda'}
           </p>
-          {common.summary && <p className="pl-4 text-sm text-fg-muted">{common.summary}</p>}
+          {common.summary && <p className="text-sm text-fg-muted">{common.summary}</p>}
         </div>
       )}
 
