@@ -1,9 +1,10 @@
 import type { SeriesProgress, TrackedSeries } from '@/types/api';
 
-// Filtro principal: onde o casal está na série.
-export type ProgressFilter = 'all' | 'watching' | 'not-started' | 'finished' | 'partner-ahead';
+// Filtro principal: entre as séries em aberto, onde o casal está. As séries que vocês
+// já terminaram não passam por esse filtro: ficam na seção "Assistidas" (ver splitEntries).
+export type ProgressFilter = 'all' | 'watching' | 'not-started' | 'partner-ahead';
 
-// Filtro secundário: o tipo da série.
+// Filtro secundário: o tipo da série. Vale tanto para as em aberto quanto para as assistidas.
 export type SeriesKind = 'series' | 'anime' | 'animation';
 export type KindFilter = 'all' | SeriesKind;
 
@@ -32,30 +33,28 @@ function memberWatched(progress: SeriesProgress, userId: string): number {
   return progress.membros.find((member) => member.usuarioId === userId)?.assistidos ?? 0;
 }
 
-// Em qual filtro de progresso a série entra. "partner-ahead" é uma lente à parte:
-// uma série em andamento em que o par está à frente também conta como "watching".
+// Com par, "assistida" é quando os dois viram tudo; sozinho, quando você viu tudo.
+export function isFinished(progress: SeriesProgress, { meId, partnerId }: FilterContext): boolean {
+  if (progress.totalEpisodios <= 0) return false;
+  const watched = partnerId ? progress.emComum.assistidos : memberWatched(progress, meId);
+  return watched >= progress.totalEpisodios;
+}
+
+// Filtro de uma série em aberto. "partner-ahead" é uma lente à parte: uma série em
+// andamento em que o par está à frente também conta como "watching".
 export function matchesProgress(
   progress: SeriesProgress,
   filter: ProgressFilter,
-  { meId, partnerId }: FilterContext,
+  { partnerId }: FilterContext,
 ): boolean {
-  if (filter === 'all') return true;
-
   const started = progress.membros.some((member) => member.assistidos > 0);
-  // Com par, "terminada" é quando os dois viram tudo; sozinho, quando você viu tudo.
-  const finished =
-    progress.totalEpisodios > 0 &&
-    (partnerId
-      ? progress.emComum.assistidos >= progress.totalEpisodios
-      : memberWatched(progress, meId) >= progress.totalEpisodios);
-
   switch (filter) {
+    case 'all':
+      return true;
     case 'not-started':
       return !started;
     case 'watching':
-      return started && !finished;
-    case 'finished':
-      return finished;
+      return started;
     case 'partner-ahead':
       return (
         !!partnerId &&
@@ -68,22 +67,41 @@ export function matchesKind(series: TrackedSeries, filter: KindFilter): boolean 
   return filter === 'all' || getSeriesKind(series) === filter;
 }
 
-// Enquanto o progresso de uma série carrega, ela só aparece em "Todas".
-export function filterEntries(
+export interface SplitEntries {
+  // Séries em aberto que passam nos filtros: a grade principal.
+  open: ListEntry[];
+  // Séries que vocês já terminaram, do tipo escolhido: a seção "Assistidas". Só existe em
+  // "Todas"; nos outros filtros fica vazia, porque séries terminadas não entram neles.
+  finished: ListEntry[];
+}
+
+// Uma série cujo progresso ainda carrega fica em aberto (e só aparece em "Todas") até
+// dar para saber onde ela entra.
+export function splitEntries(
   entries: ListEntry[],
   progressFilter: ProgressFilter,
   kindFilter: KindFilter,
   context: FilterContext,
-): ListEntry[] {
-  return entries.filter(
-    (entry) =>
-      matchesKind(entry.series, kindFilter) &&
-      (progressFilter === 'all' ||
-        (!!entry.progress && matchesProgress(entry.progress, progressFilter, context))),
-  );
+): SplitEntries {
+  const open: ListEntry[] = [];
+  const finished: ListEntry[] = [];
+  for (const entry of entries) {
+    if (!matchesKind(entry.series, kindFilter)) continue;
+    if (entry.progress && isFinished(entry.progress, context)) {
+      if (progressFilter === 'all') finished.push(entry);
+      continue;
+    }
+    if (
+      progressFilter === 'all' ||
+      (entry.progress && matchesProgress(entry.progress, progressFilter, context))
+    ) {
+      open.push(entry);
+    }
+  }
+  return { open, finished };
 }
 
-// Quantas séries cada filtro de progresso mostraria, dentro do tipo escolhido.
+// Quantas séries em aberto cada filtro mostraria, dentro do tipo escolhido.
 export function countByProgress(
   entries: ListEntry[],
   filters: ProgressFilter[],
@@ -91,7 +109,10 @@ export function countByProgress(
   context: FilterContext,
 ): Partial<Record<ProgressFilter, number>> {
   return Object.fromEntries(
-    filters.map((filter) => [filter, filterEntries(entries, filter, kindFilter, context).length]),
+    filters.map((filter) => [
+      filter,
+      splitEntries(entries, filter, kindFilter, context).open.length,
+    ]),
   );
 }
 

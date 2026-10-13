@@ -1,19 +1,18 @@
+import { SERIES_GRID } from '@/components/series/seriesGrid';
 import { SeriesCard } from '@/components/series/SeriesCard';
+import { WatchedSeriesSection } from '@/components/series/WatchedSeriesSection';
 import { Button } from '@/components/ui/Button';
 import { ChipGroup, type ChipOption } from '@/components/ui/ChipGroup';
 import { useCouple } from '@/hooks/useCouple';
 import { useListFilters } from '@/hooks/useListFilters';
 import {
   countByProgress,
-  filterEntries,
   presentKinds,
+  splitEntries,
   type KindFilter,
   type ListEntry,
   type ProgressFilter,
 } from '@/lib/seriesFilters';
-
-export const SERIES_GRID =
-  'grid grid-cols-3 gap-x-3 gap-y-5 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6';
 
 const KIND_LABELS: Record<KindFilter, string> = {
   all: 'Tudo',
@@ -28,7 +27,8 @@ interface SeriesLibraryProps {
   isProgressLoading: boolean;
 }
 
-// A grade de séries com os filtros: por onde vocês estão (principal) e por tipo (discreto).
+// A lista de séries: em cima, as em aberto com os filtros (por progresso e por tipo);
+// no fim, recolhidas, as que vocês já terminaram.
 export function SeriesLibrary({ entries, isProgressLoading }: SeriesLibraryProps) {
   const { me, partner } = useCouple();
   const filters = useListFilters();
@@ -38,7 +38,6 @@ export function SeriesLibrary({ entries, isProgressLoading }: SeriesLibraryProps
     all: 'Todas',
     watching: 'Assistindo',
     'not-started': 'Para começar',
-    finished: 'Assistidas',
     'partner-ahead': partner ? `${partner.shortName} está à frente` : 'À frente',
   };
 
@@ -46,25 +45,27 @@ export function SeriesLibrary({ entries, isProgressLoading }: SeriesLibraryProps
     me && !isProgressLoading
       ? countByProgress(
           entries,
-          ['all', 'watching', 'not-started', 'finished', 'partner-ahead'],
+          ['all', 'watching', 'not-started', 'partner-ahead'],
           filters.kind,
           context,
         )
       : null;
 
   // "Leila está à frente" só aparece quando tem alguma série nessa situação.
-  const progressFilters: ProgressFilter[] = ['all', 'watching', 'not-started', 'finished'];
+  const progressFilters: ProgressFilter[] = ['all', 'watching', 'not-started'];
   if (partner && ((counts?.['partner-ahead'] ?? 0) > 0 || filters.progress === 'partner-ahead')) {
     progressFilters.push('partner-ahead');
   }
 
-  // O filtro de tipo só aparece se a lista tiver mais de um tipo de série.
+  // O filtro de tipo só aparece se a lista (em aberto + assistidas) tiver mais de um tipo.
   const kinds = presentKinds(entries);
   const kindFilters: KindFilter[] = ['all', ...kinds];
   if (filters.kind !== 'all' && !kinds.includes(filters.kind)) kindFilters.push(filters.kind);
   const showKinds = kindFilters.length > 2;
 
-  const visible = me ? filterEntries(entries, filters.progress, filters.kind, context) : entries;
+  const { open, finished } = me
+    ? splitEntries(entries, filters.progress, filters.kind, context)
+    : { open: entries, finished: [] };
 
   const progressOptions: ChipOption<ProgressFilter>[] = progressFilters.map((filter) => ({
     value: filter,
@@ -84,7 +85,7 @@ export function SeriesLibrary({ entries, isProgressLoading }: SeriesLibraryProps
 
       <div className="flex flex-col gap-2">
         <ChipGroup
-          label="Filtrar por progresso"
+          label="Filtrar séries em aberto"
           options={progressOptions}
           value={filters.progress}
           onChange={filters.setProgress}
@@ -103,12 +104,12 @@ export function SeriesLibrary({ entries, isProgressLoading }: SeriesLibraryProps
       </div>
 
       <p className="sr-only" aria-live="polite">
-        {visible.length === 1 ? '1 série' : `${visible.length} séries`}
+        {open.length === 1 ? '1 série em aberto' : `${open.length} séries em aberto`}
       </p>
 
-      {visible.length > 0 ? (
+      {open.length > 0 ? (
         <div className={SERIES_GRID}>
-          {visible.map((entry) => (
+          {open.map((entry) => (
             <SeriesCard key={entry.series.id} series={entry.series} progress={entry.progress} />
           ))}
         </div>
@@ -117,10 +118,20 @@ export function SeriesLibrary({ entries, isProgressLoading }: SeriesLibraryProps
           <p className="text-sm text-fg-muted">
             {emptyMessage(filters.progress, filters.kind, partner?.shortName ?? null)}
           </p>
-          <Button variant="secondary" size="sm" onClick={filters.clear}>
-            Ver todas
-          </Button>
+          {filters.isFiltered && (
+            <Button variant="secondary" size="sm" onClick={filters.clearFilters}>
+              Ver todas
+            </Button>
+          )}
         </div>
+      )}
+
+      {finished.length > 0 && (
+        <WatchedSeriesSection
+          entries={finished}
+          isOpen={filters.isArchiveOpen}
+          onOpenChange={filters.setArchiveOpen}
+        />
       )}
     </section>
   );
@@ -131,17 +142,15 @@ function emptyMessage(
   kind: KindFilter,
   partnerName: string | null,
 ): string {
-  if (kind !== 'all') return 'Nenhuma série com esses filtros.';
+  if (kind !== 'all') return 'Nenhuma série em aberto com esses filtros.';
   switch (progress) {
+    case 'all':
+      return 'Nenhuma série em aberto. Tudo o que vocês adicionaram já foi assistido.';
     case 'watching':
       return 'Nenhuma série em andamento.';
     case 'not-started':
       return 'Vocês já começaram todas as séries da lista.';
-    case 'finished':
-      return 'Vocês ainda não assistiram nenhuma série até o fim.';
     case 'partner-ahead':
       return `${partnerName ?? 'Seu par'} não está à frente em nenhuma série.`;
-    default:
-      return 'Nenhuma série com esses filtros.';
   }
 }
