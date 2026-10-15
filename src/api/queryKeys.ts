@@ -5,6 +5,11 @@ export const queryKeys = {
   // Fica embaixo de "me": buscar o /me de novo também atualiza o estado do Telegram.
   telegram: () => [...queryKeys.me(), 'telegram'] as const,
   group: () => ['group'] as const,
+  push: {
+    publicKey: () => ['push', 'public-key'] as const,
+    // Se este aparelho recebe push (vem do navegador, não da API).
+    device: () => ['push', 'device'] as const,
+  },
   // Imagem gerada localmente pelo DiceBear (não vem da API).
   avatar: (style: string, seed: string) => ['avatar', style, seed] as const,
 

@@ -3,11 +3,11 @@ import { Navigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 import { AppHeader } from '@/components/AppHeader';
 import { CoupleAvatars } from '@/components/couple/CoupleAvatars';
+import { AlertsSection } from '@/components/profile/AlertsSection';
 import { AvatarPicker } from '@/components/profile/AvatarPicker';
 import { ColorPicker } from '@/components/profile/ColorPicker';
 import { InstallAppSection } from '@/components/profile/InstallAppSection';
 import { ProfileTicket, type ProfileEditor } from '@/components/profile/ProfileTicket';
-import { TelegramSection } from '@/components/profile/TelegramSettings';
 import { Button } from '@/components/ui/Button';
 import {
   EditableTextRow,
@@ -22,7 +22,7 @@ import { useGroup } from '@/hooks/useGroup';
 import { useMe, usePatchMe } from '@/hooks/useMe';
 import { useProfileHighlights } from '@/hooks/useProfileHighlights';
 import { formatMonth } from '@/lib/dates';
-import { supabase } from '@/lib/supabase';
+import { signOut } from '@/lib/signOut';
 
 // O perfil é sobre você: em cima, o ingresso (quem você é, a sua cor na dupla e os seus
 // números); embaixo, os ajustes da conta, a entrada para a página da dupla, os avisos e a
@@ -139,15 +139,11 @@ export function ProfilePage() {
           </SettingsList>
         )}
 
-        <TelegramSection />
+        <AlertsSection />
 
         <InstallAppSection />
 
-        <Button
-          variant="ghost"
-          onClick={() => supabase.auth.signOut()}
-          className="-ml-4 self-start"
-        >
+        <Button variant="ghost" onClick={() => void signOut()} className="-ml-4 self-start">
           <LogOut size={16} aria-hidden />
           Sair da conta
         </Button>
