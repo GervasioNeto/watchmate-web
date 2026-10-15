@@ -103,6 +103,25 @@ export interface SeriesInterest {
   interessados: string[];
 }
 
+// Avisos no Telegram (o bot manda ao par o que você fez no app):
+// - unavailable: a API está sem bot, então a seção nem aparece;
+// - off: nunca conectou;
+// - pending: tocou em "Conectar" e ainda não tocou em "Iniciar" no Telegram;
+// - on: recebendo avisos;
+// - paused: conectado, com os avisos desligados (pelo app, pelo /parar ou porque o bot
+//   foi bloqueado).
+export type TelegramStatus = 'unavailable' | 'off' | 'pending' | 'on' | 'paused';
+
+export interface TelegramState {
+  status: TelegramStatus;
+  // O @ da pessoa no Telegram (sem a arroba), quando ela tem um.
+  username: string | null;
+  // O @ do bot, sem a arroba.
+  botUsername: string | null;
+  // Só em "pending": o link que abre a conversa com o bot já com o código de conexão.
+  linkUrl?: string;
+}
+
 export interface EpisodePosition {
   temporada: number;
   episodio: number;
