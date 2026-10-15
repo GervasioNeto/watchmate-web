@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
+import { CoupleAvatars } from '@/components/couple/CoupleAvatars';
 import { Avatar } from '@/components/ui/Avatar';
 import { Panel } from '@/components/ui/Panel';
 import {
@@ -44,12 +45,10 @@ export function RecentActivity({ events, me, partner, now }: RecentActivityProps
                 to={`/series/${item.seriesId}`}
                 className="group flex min-h-14 items-center gap-3 rounded-md py-3"
               >
-                <span aria-hidden className="flex w-12 shrink-0">
+                {/* Largura do par (2 × 28px + 4px): o texto começa na mesma coluna em toda linha. */}
+                <span aria-hidden className="flex w-15 shrink-0">
                   {item.kind === 'together' && partner ? (
-                    <>
-                      <Avatar person={me} size="sm" className="ring-2 ring-surface" />
-                      <Avatar person={partner} size="sm" className="-ml-2.5 ring-2 ring-surface" />
-                    </>
+                    <CoupleAvatars me={me} partner={partner} size="sm" />
                   ) : (
                     <Avatar person={item.kind === 'partner' ? partner : me} size="sm" />
                   )}

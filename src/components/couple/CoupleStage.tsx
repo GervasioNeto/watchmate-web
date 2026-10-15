@@ -1,18 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
-import { Pencil, UserPlus } from 'lucide-react';
+import { Pencil } from 'lucide-react';
+import { CoupleAvatars } from '@/components/couple/CoupleAvatars';
 import {
   BUBBLE_CLASSES,
   BubbleTail,
+  NOTE_COLOR_CLASSES,
   NoteBubble,
   NoteContent,
 } from '@/components/couple/NoteBubble';
 import { NoteEditor } from '@/components/couple/NoteEditor';
-import { Avatar } from '@/components/ui/Avatar';
 import { useCoupleNotes, useIsNewNote } from '@/hooks/useCoupleNotes';
 import { cx } from '@/lib/cx';
 import { formatTimeAgo } from '@/lib/dates';
 import type { Person } from '@/lib/people';
-import { TONE_CLASSES } from '@/lib/personTone';
 
 interface CoupleStageProps {
   me: Person;
@@ -21,8 +21,8 @@ interface CoupleStageProps {
 
 // Os dois lado a lado, cada um com o seu balão de recado: o seu à esquerda (toque para
 // escrever), o do seu par à direita. Os avatares ficam no centro, e cada rabinho aponta
-// para o dono do balão; as cores dizem quem é quem. Sem par ainda, fica o lugar vazio
-// no sofá e nenhum balão. Feito para o fundo `surface` do card da dupla.
+// para o dono do balão. Sem par ainda, fica o lugar vazio no sofá e nenhum balão.
+// Feito para o fundo `surface` do card da dupla.
 export function CoupleStage({ me, partner }: CoupleStageProps) {
   const notes = useCoupleNotes();
   const isPartnerNoteNew = useIsNewNote(partner?.id ?? null, notes.partner);
@@ -37,7 +37,8 @@ export function CoupleStage({ me, partner }: CoupleStageProps) {
     wasEditing.current = isEditing;
   }, [isEditing]);
 
-  const myColor = notes.mine ? TONE_CLASSES[me.tone].soft : 'bg-surface-2';
+  // Escrito: branco. Vazio: neutro, como um convite para escrever.
+  const myColor = notes.mine ? NOTE_COLOR_CLASSES : 'bg-surface-2';
 
   return (
     <div className="flex flex-col gap-4">
@@ -45,7 +46,9 @@ export function CoupleStage({ me, partner }: CoupleStageProps) {
         (isEditing ? (
           <NoteEditor partner={partner} note={notes.mine} onClose={() => setIsEditing(false)} />
         ) : (
-          <div className="grid grid-cols-2 items-end gap-3">
+          // 16px entre os balões: com o rabinho 24px para dentro, a ponta cai no centro de
+          // cada avatar do par (ver CoupleAvatars e BubbleTail).
+          <div className="grid grid-cols-2 items-end gap-4">
             <div className="flex min-w-0 justify-end">
               <button
                 ref={myBubbleRef}
@@ -54,9 +57,10 @@ export function CoupleStage({ me, partner }: CoupleStageProps) {
                 className={cx(
                   BUBBLE_CLASSES,
                   // Só o brilho anima: `transition` animaria também a cor do contorno de foco.
-                  'px-3 py-2 transition-[filter] hover:brightness-125',
+                  'px-3 py-2 transition-[filter]',
                   myColor,
-                  !notes.mine && 'text-fg-muted',
+                  // No branco o hover escurece um pouco; no neutro, clareia.
+                  notes.mine ? 'hover:brightness-95' : 'text-fg-muted hover:brightness-125',
                 )}
               >
                 {notes.mine ? (
@@ -76,11 +80,7 @@ export function CoupleStage({ me, partner }: CoupleStageProps) {
 
             <div className="flex min-w-0 justify-start">
               {notes.partner && (
-                <NoteBubble
-                  colorClass={TONE_CLASSES[partner.tone].soft}
-                  tail="start"
-                  isNew={isPartnerNoteNew}
-                >
+                <NoteBubble colorClass={NOTE_COLOR_CLASSES} tail="start" isNew={isPartnerNoteNew}>
                   <span className="sr-only">
                     {isPartnerNoteNew ? 'Recado novo' : 'Recado'} de {partner.shortName}:{' '}
                   </span>
@@ -95,18 +95,7 @@ export function CoupleStage({ me, partner }: CoupleStageProps) {
         ))}
 
       <div className="flex justify-center">
-        <Avatar person={me} size="lg" className="ring-4 ring-surface" />
-        {partner ? (
-          <Avatar person={partner} size="lg" className="-ml-3 ring-4 ring-surface" />
-        ) : (
-          // Lugar de quem ainda não entrou: opaco, para o anel não ficar sobre o seu avatar.
-          <span
-            aria-hidden
-            className="-ml-3 flex h-14 w-14 items-center justify-center rounded-full border-2 border-dashed border-fg-subtle bg-surface-2 text-fg-subtle ring-4 ring-surface"
-          >
-            <UserPlus size={20} />
-          </span>
-        )}
+        <CoupleAvatars me={me} partner={partner} size="lg" />
       </div>
     </div>
   );
