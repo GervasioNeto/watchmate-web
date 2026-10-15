@@ -5,6 +5,7 @@ import { groupService } from '@/api/services/groupService';
 import { meService } from '@/api/services/meService';
 import { progressService } from '@/api/services/progressService';
 import { seriesService } from '@/api/services/seriesService';
+import { telegramService } from '@/api/services/telegramService';
 import type { AvatarStyleId } from '@/lib/avatarStyles';
 
 // Each factory pairs a cache key with its fetcher. The returned queryKey is
@@ -13,6 +14,7 @@ import type { AvatarStyleId } from '@/lib/avatarStyles';
 
 export const meQueries = {
   detail: () => queryOptions({ queryKey: queryKeys.me(), queryFn: meService.get }),
+  telegram: () => queryOptions({ queryKey: queryKeys.telegram(), queryFn: telegramService.get }),
 };
 
 export const avatarQueries = {

@@ -33,3 +33,9 @@ export const TONE_CLASSES: Record<PersonTone, ToneClasses> = {
     text: 'text-person-2',
   },
 };
+
+// Como cada cor é chamada nos textos ("Sua cor na dupla: roxo").
+export const TONE_NAMES: Record<PersonTone, string> = {
+  one: 'roxo',
+  two: 'âmbar',
+};

@@ -5,14 +5,17 @@ import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
 import { cx } from '@/lib/cx';
 
+// Um grupo de ajustes: o título fora e as linhas num cartão `surface`, como os painéis.
 export function SettingsList({ title, children }: { title: string; children: ReactNode }) {
   const headingId = useId();
   return (
     <section aria-labelledby={headingId} className="flex flex-col gap-2">
-      <h2 id={headingId} className="text-sm font-semibold text-fg-muted">
+      <h2 id={headingId} className="px-1 text-sm font-semibold text-fg-muted">
         {title}
       </h2>
-      <div className="flex flex-col divide-y divide-line border-y border-line">{children}</div>
+      <div className="flex flex-col divide-y divide-line rounded-lg bg-surface px-4">
+        {children}
+      </div>
     </section>
   );
 }
