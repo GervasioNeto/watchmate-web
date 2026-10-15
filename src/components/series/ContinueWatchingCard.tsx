@@ -1,31 +1,74 @@
-import { useId } from 'react';
+import { useId, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight, Play } from 'lucide-react';
+import { ChevronRight, Play, Sofa } from 'lucide-react';
+import { CoupleAvatars } from '@/components/couple/CoupleAvatars';
 import { Avatar } from '@/components/ui/Avatar';
 import { useCouple } from '@/hooks/useCouple';
+import type { TonightPick } from '@/lib/listOrder';
 import { subjectName } from '@/lib/people';
-import { formatEpisodeCode, getMember, getNextPosition } from '@/lib/progress';
+import { formatEpisodeCode, getMember } from '@/lib/progress';
 import { tmdbBackdropUrl, tmdbPosterUrl } from '@/lib/tmdb';
-import type { SeriesProgress, TrackedSeries } from '@/types/api';
 
-interface ContinueWatchingCardProps {
-  series: TrackedSeries;
-  progress: SeriesProgress;
-}
-
-// Atalho para a série em andamento mais recente. Não marca nada: marcar fica na página
+// Atalho para a série de hoje (ver pickTonight). Quando vocês estão no mesmo ponto, é o
+// "Hoje no sofá": um convite para o próximo episódio juntos. Senão, "Continuar
+// assistindo": onde cada um está e o seu próximo. Não marca nada: marcar fica na página
 // da série, onde dá para ver o que cada um já viu antes de decidir.
-export function ContinueWatchingCard({ series, progress }: ContinueWatchingCardProps) {
+export function ContinueWatchingCard({ pick }: { pick: TonightPick }) {
   const { me, partner } = useCouple();
   const headingId = useId();
 
   if (!me) return null;
 
-  const people = [me, partner].filter((person) => person !== null);
-  const myMember = getMember(progress, me.id);
-  const next = getNextPosition(myMember?.posicaoAtual ?? null, series.temporadas);
+  const { series, progress } = pick.entry;
+  const next = formatEpisodeCode(pick.status.position);
+  const isNew = pick.status.kind === 'new-episode';
+  const isTogether = pick.together && partner;
   const posterUrl = tmdbPosterUrl(series.posterPath, 'w185');
   const backdropUrl = tmdbBackdropUrl(series.backdropPath);
+
+  let details: ReactNode;
+  let callToAction: ReactNode;
+  if (isTogether) {
+    const common = progress.emComum.posicaoAtual;
+    details = (
+      <p className="flex items-center gap-2 text-sm text-fg-muted">
+        <CoupleAvatars me={me} partner={partner} size="sm" />
+        {common ? `Vocês dois pararam no ${formatEpisodeCode(common)}` : 'Vocês dois juntos'}
+      </p>
+    );
+    callToAction = isNew ? (
+      <>
+        <span className="text-accent">Saiu o {next}.</span> Bora?
+      </>
+    ) : (
+      `Bora o ${next}?`
+    );
+  } else {
+    const people = [me, partner].filter((person) => person !== null);
+    details = (
+      <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-fg-muted">
+        {people.map((person) => {
+          const position = getMember(progress, person.id)?.posicaoAtual ?? null;
+          return (
+            <li key={person.id} className="flex items-center gap-1.5">
+              <Avatar person={person} size="xs" />
+              {subjectName(person)}
+              <span className="tabular-nums">
+                {position ? formatEpisodeCode(position) : 'não começou'}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    );
+    callToAction = isNew ? (
+      <>
+        <span className="text-accent">Novo:</span> {next}
+      </>
+    ) : (
+      `Próximo: ${next}`
+    );
+  }
 
   return (
     // O link do nome cobre o card inteiro (after:inset-0); o contorno de foco vai no card.
@@ -52,8 +95,17 @@ export function ContinueWatchingCard({ series, progress }: ContinueWatchingCardP
           id={headingId}
           className="flex items-center gap-1.5 text-xs font-semibold text-fg-muted"
         >
-          <Play size={11} aria-hidden className="fill-current" />
-          Continuar assistindo
+          {isTogether ? (
+            <>
+              <Sofa size={13} aria-hidden className="text-together" />
+              Hoje no sofá
+            </>
+          ) : (
+            <>
+              <Play size={11} aria-hidden className="fill-current" />
+              Continuar assistindo
+            </>
+          )}
         </h2>
 
         <div className="flex items-center gap-4">
@@ -68,23 +120,8 @@ export function ContinueWatchingCard({ series, progress }: ContinueWatchingCardP
             >
               {series.nome}
             </Link>
-            <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-fg-muted">
-              {people.map((person) => {
-                const position = getMember(progress, person.id)?.posicaoAtual ?? null;
-                return (
-                  <li key={person.id} className="flex items-center gap-1.5">
-                    <Avatar person={person} size="xs" />
-                    {subjectName(person)}
-                    <span className="tabular-nums">
-                      {position ? formatEpisodeCode(position) : 'não começou'}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-            <p className="text-sm font-semibold">
-              {next ? `Próximo: ${formatEpisodeCode(next)}` : 'Você chegou ao fim da série.'}
-            </p>
+            {details}
+            <p className="text-sm font-semibold tabular-nums">{callToAction}</p>
           </div>
         </div>
       </div>

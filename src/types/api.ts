@@ -76,8 +76,8 @@ export interface TrackedSeries {
   modo: WatchMode;
   adicionadoEm: string;
   adicionadoPor: string | null;
-  // Snapshot do TMDB no momento em que a série foi adicionada — não
-  // atualiza sozinho se a série ganhar uma temporada nova depois.
+  // Snapshot do TMDB. A API renova o das séries no ar, então temporadas e episódios
+  // novos aparecem sozinhos.
   temporadas: SeasonSnapshot[];
   sinopse: string | null;
   notaMedia: number | null;
@@ -88,11 +88,29 @@ export interface TrackedSeries {
   idiomaOriginal: string | null;
   nomeOriginal: string | null;
   englishName: string | null;
+  // Do mesmo snapshot. Null quando o TMDB não informa: série que acabou não tem próximo,
+  // e série que a API ainda não renovou fica sem os dois (ver lib/airing.ts).
+  ultimoEpisodioExibido: AiringEpisode | null;
+  proximoEpisodio: AiringEpisode | null;
+  // "Quero ver": ids de quem do grupo marcou a série, na ordem em que marcou.
+  interessados: string[];
+  // A reação que vocês mais usaram na série, contando só o que não é spoiler para você.
+  // Null enquanto houver poucas reações.
+  emojiDaSerie: string | null;
+}
+
+export interface SeriesInterest {
+  interessados: string[];
 }
 
 export interface EpisodePosition {
   temporada: number;
   episodio: number;
+}
+
+// Um episódio com a data de exibição, só o dia ('2026-10-16'): ver parseAirDate.
+export interface AiringEpisode extends EpisodePosition {
+  dataExibicao: string | null;
 }
 
 export interface MemberProgress {

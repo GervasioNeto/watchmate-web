@@ -1,10 +1,10 @@
-import { SERIES_GRID } from '@/components/series/seriesGrid';
-import { SeriesCard } from '@/components/series/SeriesCard';
+import { LibrarySection, SeriesGrid, ToStartSection } from '@/components/series/LibrarySection';
 import { WatchedSeriesSection } from '@/components/series/WatchedSeriesSection';
 import { Button } from '@/components/ui/Button';
 import { ChipGroup, type ChipOption } from '@/components/ui/ChipGroup';
 import { useCouple } from '@/hooks/useCouple';
 import { useListFilters } from '@/hooks/useListFilters';
+import { groupBySection, orderFinished, type ListSection } from '@/lib/listOrder';
 import {
   countByProgress,
   presentKinds,
@@ -21,6 +21,12 @@ const KIND_LABELS: Record<KindFilter, string> = {
   animation: 'Animações',
 };
 
+const SECTION_LABELS: Record<ListSection, string> = {
+  watching: 'Assistindo',
+  waiting: 'Esperando episódio',
+  'to-start': 'Para começar',
+};
+
 interface SeriesLibraryProps {
   entries: ListEntry[];
   // Enquanto o progresso de alguma série carrega, as contagens ficam escondidas.
@@ -34,9 +40,11 @@ export function SeriesLibrary({ entries, isProgressLoading }: SeriesLibraryProps
   const filters = useListFilters();
   const context = { meId: me?.id ?? '', partnerId: partner?.id ?? null };
 
+  // "Em andamento" e não "Assistindo": o filtro junta os blocos "Assistindo" e
+  // "Esperando episódio", e o mesmo nome com contagens diferentes confundiria.
   const progressLabels: Record<ProgressFilter, string> = {
     all: 'Todas',
-    watching: 'Assistindo',
+    watching: 'Em andamento',
     'not-started': 'Para começar',
     'partner-ahead': partner ? `${partner.shortName} está à frente` : 'À frente',
   };
@@ -66,6 +74,13 @@ export function SeriesLibrary({ entries, isProgressLoading }: SeriesLibraryProps
   const { open, finished } = me
     ? splitEntries(entries, filters.progress, filters.kind, context)
     : { open: entries, finished: [] };
+
+  // A ordem só é montada com todo o progresso carregado: o progresso chega série a série,
+  // e reordenar a cada resposta faria os cards pularem. Até lá, a ordem em que entraram.
+  const groups = me && !isProgressLoading ? groupBySection(open, me, partner, new Date()) : null;
+  // Os títulos dos blocos só em "Todas": nos outros filtros a lista já é um recorte.
+  const showSections = groups !== null && filters.progress === 'all';
+  const ordered = groups ? groups.flatMap((group) => group.entries) : open;
 
   const progressOptions: ChipOption<ProgressFilter>[] = progressFilters.map((filter) => ({
     value: filter,
@@ -108,11 +123,27 @@ export function SeriesLibrary({ entries, isProgressLoading }: SeriesLibraryProps
       </p>
 
       {open.length > 0 ? (
-        <div className={SERIES_GRID}>
-          {open.map((entry) => (
-            <SeriesCard key={entry.series.id} series={entry.series} progress={entry.progress} />
-          ))}
-        </div>
+        showSections ? (
+          <div className="flex flex-col gap-8">
+            {groups.map((group) =>
+              group.section === 'to-start' ? (
+                <ToStartSection
+                  key={group.section}
+                  title={SECTION_LABELS[group.section]}
+                  entries={group.entries}
+                />
+              ) : (
+                <LibrarySection
+                  key={group.section}
+                  title={SECTION_LABELS[group.section]}
+                  entries={group.entries}
+                />
+              ),
+            )}
+          </div>
+        ) : (
+          <SeriesGrid entries={ordered} />
+        )
       ) : (
         <div className="flex flex-col items-start gap-3 rounded-lg border border-line p-5">
           <p className="text-sm text-fg-muted">
@@ -128,7 +159,7 @@ export function SeriesLibrary({ entries, isProgressLoading }: SeriesLibraryProps
 
       {finished.length > 0 && (
         <WatchedSeriesSection
-          entries={finished}
+          entries={orderFinished(finished)}
           isOpen={filters.isArchiveOpen}
           onOpenChange={filters.setArchiveOpen}
         />
