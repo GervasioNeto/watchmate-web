@@ -41,14 +41,15 @@ export function CoupleStage({ me, partner }: CoupleStageProps) {
   const myColor = notes.mine ? NOTE_COLOR_CLASSES : 'bg-surface-2';
 
   return (
-    <div className="flex flex-col gap-4">
+    // 20px até os avatares: o rabinho (12px) para um pouco antes do anel de cada um.
+    <div className="flex flex-col gap-5">
       {partner &&
         (isEditing ? (
           <NoteEditor partner={partner} note={notes.mine} onClose={() => setIsEditing(false)} />
         ) : (
-          // 16px entre os balões: com o rabinho 24px para dentro, a ponta cai no centro de
-          // cada avatar do par (ver CoupleAvatars e BubbleTail).
-          <div className="grid grid-cols-2 items-end gap-4">
+          // 20px entre os balões: com o rabinho 24px para dentro, a ponta cai 34px para o
+          // lado do meio, no centro de cada avatar do par (ver CoupleAvatars e BubbleTail).
+          <div className="grid grid-cols-2 items-end gap-5">
             <div className="flex min-w-0 justify-end">
               <button
                 ref={myBubbleRef}

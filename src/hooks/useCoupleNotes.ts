@@ -3,8 +3,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { meQueries } from '@/api/queries';
 import { groupService } from '@/api/services/groupService';
 import { useMe } from '@/hooks/useMe';
+import { withOwnMember } from '@/lib/meCache';
 import { toNote, type Note } from '@/lib/notes';
-import type { Me, NoteFields } from '@/types/api';
+import type { NoteFields } from '@/types/api';
 
 // Os recados vêm junto com os membros do grupo no /me: chegam sem busca extra e são
 // atualizados quando o /me é buscado de novo (ao voltar para a aba, por exemplo).
@@ -19,23 +20,6 @@ export function useCoupleNotes(): { mine: Note | null; partner: Note | null } {
       partner: partner ? toNote(partner) : null,
     };
   }, [me]);
-}
-
-// Troca só a sua entrada em membroDoGrupo.grupo.membros; o resto do /me fica intacto.
-function withOwnNote(me: Me, note: NoteFields): Me {
-  const grupo = me.membroDoGrupo?.grupo;
-  if (!grupo) return me;
-  return {
-    ...me,
-    membroDoGrupo: {
-      grupo: {
-        ...grupo,
-        membros: grupo.membros.map((member) =>
-          member.usuario.id === me.id ? { ...member, ...note } : member,
-        ),
-      },
-    },
-  };
 }
 
 // Salva o seu recado (texto já normalizado) ou apaga com null. Não é otimista: o editor
@@ -53,7 +37,7 @@ export function useSaveNote() {
     },
     onSuccess: (note) => {
       queryClient.setQueryData(meQueries.detail().queryKey, (old) =>
-        old ? withOwnNote(old, note) : old,
+        old ? withOwnMember(old, note) : old,
       );
     },
   });

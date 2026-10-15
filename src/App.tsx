@@ -1,7 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { AuthProvider } from '@/context/AuthContext';
 import { AddSeriesPage } from '@/routes/AddSeriesPage';
+import { AppLayout } from '@/routes/AppLayout';
 import { CouplePage } from '@/routes/CouplePage';
 import { HomePage } from '@/routes/HomePage';
 import { LoginPage } from '@/routes/LoginPage';
@@ -9,68 +10,46 @@ import { MyListPage } from '@/routes/MyListPage';
 import { OnboardingPage } from '@/routes/OnboardingPage';
 import { ProfilePage } from '@/routes/ProfilePage';
 import { RequireAuth } from '@/routes/RequireAuth';
+import { RootLayout } from '@/routes/RootLayout';
 import { SeriesDetailPage } from '@/routes/SeriesDetailPage';
 
 const queryClient = new QueryClient();
+
+// As páginas de quem já entrou ficam dentro do AppLayout (a barra de destinos); a entrada,
+// o login e a escolha da dupla ficam fora, em tela cheia.
+const router = createBrowserRouter([
+  {
+    element: <RootLayout />,
+    children: [
+      { path: '/', element: <HomePage /> },
+      { path: '/login', element: <LoginPage /> },
+      {
+        path: '/onboarding',
+        element: (
+          <RequireAuth>
+            <OnboardingPage />
+          </RequireAuth>
+        ),
+      },
+      {
+        element: <AppLayout />,
+        children: [
+          { path: '/my-list', element: <MyListPage /> },
+          { path: '/series/add', element: <AddSeriesPage /> },
+          { path: '/series/:seriesId', element: <SeriesDetailPage /> },
+          { path: '/couple', element: <CouplePage /> },
+          { path: '/profile', element: <ProfilePage /> },
+        ],
+      },
+    ],
+  },
+]);
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route
-              path="/onboarding"
-              element={
-                <RequireAuth>
-                  <OnboardingPage />
-                </RequireAuth>
-              }
-            />
-            <Route
-              path="/my-list"
-              element={
-                <RequireAuth>
-                  <MyListPage />
-                </RequireAuth>
-              }
-            />
-            <Route
-              path="/series/add"
-              element={
-                <RequireAuth>
-                  <AddSeriesPage />
-                </RequireAuth>
-              }
-            />
-            <Route
-              path="/series/:seriesId"
-              element={
-                <RequireAuth>
-                  <SeriesDetailPage />
-                </RequireAuth>
-              }
-            />
-            <Route
-              path="/couple"
-              element={
-                <RequireAuth>
-                  <CouplePage />
-                </RequireAuth>
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <RequireAuth>
-                  <ProfilePage />
-                </RequireAuth>
-              }
-            />
-          </Routes>
-        </BrowserRouter>
+        <RouterProvider router={router} />
       </AuthProvider>
     </QueryClientProvider>
   );

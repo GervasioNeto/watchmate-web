@@ -130,7 +130,7 @@ export function longestTogetherStreak(days: DayActivity[]): number {
   return longest;
 }
 
-// Como o dia é pintado: rosa quando viram juntos, metade de cada cor quando cada um
+// Como o dia é pintado: laranja quando viram juntos, metade de cada cor quando cada um
 // viu na sua hora, a cor de quem viu quando foi só uma pessoa.
 export type DayKind = 'empty' | 'together' | 'split' | 'me' | 'partner';
 

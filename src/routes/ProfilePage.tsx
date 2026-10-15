@@ -1,11 +1,12 @@
-import { useId, useState } from 'react';
+import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 import { AppHeader } from '@/components/AppHeader';
-import { BackButton } from '@/components/BackButton';
 import { CoupleAvatars } from '@/components/couple/CoupleAvatars';
 import { AvatarPicker } from '@/components/profile/AvatarPicker';
-import { ProfileTicket } from '@/components/profile/ProfileTicket';
+import { ColorPicker } from '@/components/profile/ColorPicker';
+import { InstallAppSection } from '@/components/profile/InstallAppSection';
+import { ProfileTicket, type ProfileEditor } from '@/components/profile/ProfileTicket';
 import { TelegramSection } from '@/components/profile/TelegramSettings';
 import { Button } from '@/components/ui/Button';
 import {
@@ -14,6 +15,7 @@ import {
   SettingsList,
   SettingsRow,
 } from '@/components/ui/SettingsList';
+import { Sheet } from '@/components/ui/Sheet';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useCouple } from '@/hooks/useCouple';
 import { useGroup } from '@/hooks/useGroup';
@@ -23,50 +25,85 @@ import { formatMonth } from '@/lib/dates';
 import { supabase } from '@/lib/supabase';
 
 // O perfil é sobre você: em cima, o ingresso (quem você é, a sua cor na dupla e os seus
-// números); embaixo, os ajustes da conta, a entrada para a página da dupla e os avisos.
+// números); embaixo, os ajustes da conta, a entrada para a página da dupla, os avisos e a
+// instalação como app.
 export function ProfilePage() {
   const { data: me } = useMe();
   const { me: mePerson, partner } = useCouple();
   const { data: group, isLoading: isGroupLoading } = useGroup();
   const highlights = useProfileHighlights();
   const patchMe = usePatchMe();
-  const [isPickingAvatar, setIsPickingAvatar] = useState(false);
-  const avatarPickerId = useId();
+  const [openEditor, setOpenEditor] = useState<ProfileEditor | null>(null);
+  // Fica guardado depois de fechar: a folha devolve o foco a ele ao terminar de fechar.
+  const [editorTrigger, setEditorTrigger] = useState<HTMLElement | null>(null);
 
   if (!isGroupLoading && group === null) {
     return <Navigate to="/onboarding" replace />;
   }
 
+  function openSheet(editor: ProfileEditor, trigger: HTMLElement) {
+    setEditorTrigger(trigger);
+    setOpenEditor(editor);
+  }
+
+  const closeSheet = () => setOpenEditor(null);
+  // As escolhas valem na hora: o "Pronto" só fecha a folha.
+  const doneButton = (
+    <Button onClick={closeSheet} className="w-full">
+      Pronto
+    </Button>
+  );
+
   return (
-    <div className="min-h-svh">
+    <>
       <AppHeader />
 
       <main className="mx-auto flex max-w-xl flex-col gap-8 px-4 pt-6 pb-16">
-        <div className="flex flex-col gap-4">
-          {/* O botão vem antes no DOM (primeiro no Tab) e fica por cima do canto do ingresso. */}
-          <div className="relative">
-            <BackButton className="absolute top-2 left-2 z-10" />
-            {mePerson && me ? (
-              <ProfileTicket
-                me={mePerson}
-                partner={partner}
-                memberSince={new Date(me.criadoEm)}
-                highlights={highlights}
-                isPickingAvatar={isPickingAvatar}
-                avatarPickerId={avatarPickerId}
-                onToggleAvatarPicker={() => setIsPickingAvatar((open) => !open)}
-              />
-            ) : (
-              <Skeleton className="h-112 rounded-lg" />
-            )}
-          </div>
+        {mePerson && me ? (
+          <ProfileTicket
+            me={mePerson}
+            partner={partner}
+            memberSince={new Date(me.criadoEm)}
+            highlights={highlights}
+            openEditor={openEditor}
+            onOpenEditor={openSheet}
+          />
+        ) : (
+          <Skeleton className="h-112 rounded-lg" />
+        )}
 
-          {isPickingAvatar && mePerson && (
-            <div id={avatarPickerId}>
+        {mePerson && (
+          <>
+            <Sheet
+              open={openEditor === 'avatar'}
+              onClose={closeSheet}
+              title="Seu avatar"
+              description={
+                partner
+                  ? `É como ${partner.shortName} vê você no app.`
+                  : 'É como você aparece no app.'
+              }
+              returnFocusTo={editorTrigger}
+              footer={doneButton}
+            >
               <AvatarPicker me={mePerson} />
-            </div>
-          )}
-        </div>
+            </Sheet>
+            <Sheet
+              open={openEditor === 'color'}
+              onClose={closeSheet}
+              title={partner ? 'Sua cor na dupla' : 'Sua cor'}
+              description={
+                partner
+                  ? `A mesma para você e para ${partner.shortName}: marca o que você vê sem ${partner.shortName}.`
+                  : 'Marca os seus episódios nas séries e no calendário.'
+              }
+              returnFocusTo={editorTrigger}
+              footer={doneButton}
+            >
+              <ColorPicker me={mePerson} partner={partner} />
+            </Sheet>
+          </>
+        )}
 
         {me && (
           <SettingsList title="Conta">
@@ -104,6 +141,8 @@ export function ProfilePage() {
 
         <TelegramSection />
 
+        <InstallAppSection />
+
         <Button
           variant="ghost"
           onClick={() => supabase.auth.signOut()}
@@ -113,6 +152,6 @@ export function ProfilePage() {
           Sair da conta
         </Button>
       </main>
-    </div>
+    </>
   );
 }

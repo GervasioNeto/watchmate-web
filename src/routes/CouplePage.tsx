@@ -1,6 +1,5 @@
 import { Navigate } from 'react-router-dom';
 import { AppHeader } from '@/components/AppHeader';
-import { BackButton } from '@/components/BackButton';
 import { CoupleHero } from '@/components/couple/CoupleHero';
 import { CoupleWeek } from '@/components/couple/CoupleWeek';
 import { MonthCalendar } from '@/components/couple/MonthCalendar';
@@ -33,27 +32,23 @@ export function CouplePage() {
     me && stats ? collectWatchEvents(entries, { meId: me.id, partnerId: partner?.id ?? null }) : [];
 
   return (
-    <div className="min-h-svh">
+    <>
       <AppHeader />
 
       <main className="mx-auto flex max-w-xl flex-col gap-8 px-4 pt-6 pb-16">
         <div className="flex flex-col gap-4">
-          {/* O botão vem antes no DOM (primeiro no Tab) e fica por cima do canto do hero. */}
-          <div className="relative">
-            <BackButton className="absolute top-2 left-2" />
-            {me && group ? (
-              <CoupleHero
-                me={me}
-                partner={partner}
-                groupName={group.nome}
-                since={since}
-                inviteCode={partner ? null : group.codigoConvite}
-                stats={stats}
-              />
-            ) : (
-              <Skeleton className="h-80 rounded-lg" />
-            )}
-          </div>
+          {me && group ? (
+            <CoupleHero
+              me={me}
+              partner={partner}
+              groupName={group.nome}
+              since={since}
+              inviteCode={partner ? null : group.codigoConvite}
+              stats={stats}
+            />
+          ) : (
+            <Skeleton className="h-80 rounded-lg" />
+          )}
 
           {me && stats && since ? (
             <>
@@ -80,6 +75,6 @@ export function CouplePage() {
           </SettingsList>
         )}
       </main>
-    </div>
+    </>
   );
 }

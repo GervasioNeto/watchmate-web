@@ -50,7 +50,7 @@ export function CoupleProgress({ rows, common, children, className }: CoupleProg
 
       {common && (
         <div className="flex flex-col gap-0.5 border-t border-line pt-3">
-          {/* Sem cor: "em comum" conta o que os dois viram, juntos ou não. O rosa é só do "juntos". */}
+          {/* Sem cor: "em comum" conta o que os dois viram, juntos ou não. O laranja é só do "juntos". */}
           <p className="text-sm font-semibold">
             {common.position
               ? `Em comum até ${formatEpisodeCode(common.position)}`

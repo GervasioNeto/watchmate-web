@@ -126,7 +126,7 @@ function AheadBadge({ person, count }: { person: Person; count: number }) {
   );
 }
 
-// Quem quer ver, do ponto de vista do par: rosa quando são os dois, a cor do par quando é
+// Quem quer ver, do ponto de vista do par: laranja quando são os dois, a cor do par quando é
 // só ele. O seu "quero ver" já aparece no coração do botão, então sozinho não ganha selo.
 function InterestBadge({ interest, partner }: { interest: CoupleInterest; partner: Person }) {
   if (interest.mine && interest.partner) {

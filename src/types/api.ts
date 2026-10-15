@@ -19,6 +19,9 @@ export interface GroupMember {
   grupoId: string;
   usuarioId: string;
   entrouEm: string;
+  // A cor da pessoa na dupla: um id da paleta (ver PERSON_COLORS em lib/personTone.ts).
+  // Null em membros criados antes das cores existirem: o app usa a cor padrão.
+  cor: string | null;
 }
 
 export interface Group {
@@ -36,8 +39,10 @@ export interface NoteFields {
 }
 
 export interface GroupMemberSummary extends NoteFields {
-  // Ordem de entrada no grupo: define a cor fixa de cada pessoa (ver buildCouple).
+  // Ordem de entrada no grupo: desempata as cores se alguma vier repetida (ver buildCouple).
   entrouEm: string;
+  // A cor escolhida na paleta (ver PERSON_COLORS em lib/personTone.ts). Null: cor padrão.
+  cor: string | null;
   usuario: AvatarFields & {
     id: string;
     nome: string | null;

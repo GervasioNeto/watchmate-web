@@ -15,7 +15,7 @@ export const BUBBLE_CLASSES =
 export const NOTE_COLOR_CLASSES = 'bg-note text-on-note';
 
 // O rabinho é um triângulo recortado da mesma cor do balão, com a ponta para baixo,
-// do lado do avatar. Fica 24px para dentro da borda: com os balões 16px afastados, é
+// do lado do avatar. Fica 24px para dentro da borda: com os balões 20px afastados, é
 // o centro de cada avatar do par no palco (ver CoupleAvatars).
 export function BubbleTail({ side, colorClass }: { side: TailSide; colorClass: string }) {
   return (

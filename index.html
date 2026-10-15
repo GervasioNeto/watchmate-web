@@ -2,16 +2,31 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#111013" />
+    <meta
+      name="description"
+      content="A mesma série, cada um no seu ritmo: o progresso da dupla, o que viram juntos e sem spoiler entre vocês."
+    />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>WatchMate</title>
 
+    <!-- Instalado como app (PWA): o manifesto vale para Android e computador; as tags
+         apple-* são o que o iPhone lê ao adicionar à Tela de Início. -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="WatchMate" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- crossorigin: a resposta vem legível (CORS), e o service worker pode guardá-la. -->
     <link
       href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600&family=Manrope:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
+      crossorigin
     />
     <script src="https://accounts.google.com/gsi/client" async defer></script>
   </head>
