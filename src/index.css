@@ -51,6 +51,10 @@
   --color-together-soft: #9e0059;
   --color-on-together: #1f0710;
 
+  /* Recado (balão de fala no card da dupla): branco gelo, letra preta */
+  --color-note: #e6e3e8;
+  --color-on-note: #111013;
+
   /* Estados */
   --color-danger: #ff6b6b;
 

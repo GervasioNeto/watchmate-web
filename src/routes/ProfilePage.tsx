@@ -2,6 +2,7 @@ import { useId, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 import { AppHeader } from '@/components/AppHeader';
+import { CoupleAvatars } from '@/components/couple/CoupleAvatars';
 import { AvatarPicker } from '@/components/profile/AvatarPicker';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
@@ -87,10 +88,7 @@ export function ProfilePage() {
               label={partner ? `Você e ${partner.shortName}` : 'Seu par ainda não entrou'}
             >
               <span className="flex items-center gap-2">
-                <span aria-hidden className="flex shrink-0">
-                  <Avatar person={mePerson} size="sm" className="ring-2 ring-canvas" />
-                  <Avatar person={partner} size="sm" className="-ml-2 ring-2 ring-canvas" />
-                </span>
+                <CoupleAvatars me={mePerson} partner={partner} size="sm" />
                 <span className="truncate">{group.nome ?? 'Sem nome'}</span>
               </span>
             </SettingsLinkRow>
