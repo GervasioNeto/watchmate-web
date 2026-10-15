@@ -2,6 +2,8 @@
 // invalidating a prefix (e.g. a whole season) also hits everything below it.
 export const queryKeys = {
   me: () => ['me'] as const,
+  // Fica embaixo de "me": buscar o /me de novo também atualiza o estado do Telegram.
+  telegram: () => [...queryKeys.me(), 'telegram'] as const,
   group: () => ['group'] as const,
   // Imagem gerada localmente pelo DiceBear (não vem da API).
   avatar: (style: string, seed: string) => ['avatar', style, seed] as const,

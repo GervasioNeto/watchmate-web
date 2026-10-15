@@ -9,7 +9,7 @@ const sizeClasses: Record<Size, string> = {
   xs: 'h-5 w-5 text-[10px]',
   sm: 'h-7 w-7 text-xs',
   md: 'h-9 w-9 text-sm',
-  lg: 'h-16 w-16 text-2xl',
+  lg: 'h-14 w-14 text-xl',
   xl: 'h-24 w-24 text-4xl',
 };
 

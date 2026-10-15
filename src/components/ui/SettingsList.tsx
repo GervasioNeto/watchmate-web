@@ -1,16 +1,34 @@
 import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { Link } from 'react-router-dom';
+import { ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
+import { cx } from '@/lib/cx';
 
+// Um grupo de ajustes: o título fora e as linhas num cartão `surface`, como os painéis.
 export function SettingsList({ title, children }: { title: string; children: ReactNode }) {
   const headingId = useId();
   return (
     <section aria-labelledby={headingId} className="flex flex-col gap-2">
-      <h2 id={headingId} className="text-sm font-semibold text-fg-muted">
+      <h2 id={headingId} className="px-1 text-sm font-semibold text-fg-muted">
         {title}
       </h2>
-      <div className="flex flex-col divide-y divide-line border-y border-line">{children}</div>
+      <div className="flex flex-col divide-y divide-line rounded-lg bg-surface px-4">
+        {children}
+      </div>
     </section>
+  );
+}
+
+const ROW_CLASSES = 'flex min-h-16 items-center gap-3 py-3';
+
+// Rótulo pequeno em cima, valor embaixo: o miolo de toda linha da lista.
+function RowContent({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+      <span className="text-xs text-fg-subtle">{label}</span>
+      <div className="min-w-0 text-sm text-fg">{children}</div>
+    </div>
   );
 }
 
@@ -22,13 +40,30 @@ interface SettingsRowProps {
 
 export function SettingsRow({ label, children, action }: SettingsRowProps) {
   return (
-    <div className="flex min-h-16 items-center gap-3 py-3">
-      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="text-xs text-fg-subtle">{label}</span>
-        <div className="min-w-0 text-sm text-fg">{children}</div>
-      </div>
+    <div className={ROW_CLASSES}>
+      <RowContent label={label}>{children}</RowContent>
       {action}
     </div>
+  );
+}
+
+interface SettingsLinkRowProps {
+  to: string;
+  label: string;
+  children: ReactNode;
+}
+
+// Linha que leva para outra página: mostra um resumo, e o ajuste em si fica lá.
+export function SettingsLinkRow({ to, label, children }: SettingsLinkRowProps) {
+  return (
+    <Link to={to} className={cx(ROW_CLASSES, 'group rounded-md')}>
+      <RowContent label={label}>{children}</RowContent>
+      <ChevronRight
+        size={18}
+        aria-hidden
+        className="shrink-0 text-fg-muted transition-transform group-hover:translate-x-0.5 group-hover:text-fg"
+      />
+    </Link>
   );
 }
 

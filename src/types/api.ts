@@ -29,7 +29,13 @@ export interface Group {
   membros: GroupMember[];
 }
 
-export interface GroupMemberSummary {
+// Recado que o membro deixa para o par. Os dois são null juntos (sem recado).
+export interface NoteFields {
+  recado: string | null;
+  recadoEm: string | null;
+}
+
+export interface GroupMemberSummary extends NoteFields {
   // Ordem de entrada no grupo: define a cor fixa de cada pessoa (ver buildCouple).
   entrouEm: string;
   usuario: AvatarFields & {
@@ -70,8 +76,8 @@ export interface TrackedSeries {
   modo: WatchMode;
   adicionadoEm: string;
   adicionadoPor: string | null;
-  // Snapshot do TMDB no momento em que a série foi adicionada — não
-  // atualiza sozinho se a série ganhar uma temporada nova depois.
+  // Snapshot do TMDB. A API renova o das séries no ar, então temporadas e episódios
+  // novos aparecem sozinhos.
   temporadas: SeasonSnapshot[];
   sinopse: string | null;
   notaMedia: number | null;
@@ -82,11 +88,48 @@ export interface TrackedSeries {
   idiomaOriginal: string | null;
   nomeOriginal: string | null;
   englishName: string | null;
+  // Do mesmo snapshot. Null quando o TMDB não informa: série que acabou não tem próximo,
+  // e série que a API ainda não renovou fica sem os dois (ver lib/airing.ts).
+  ultimoEpisodioExibido: AiringEpisode | null;
+  proximoEpisodio: AiringEpisode | null;
+  // "Quero ver": ids de quem do grupo marcou a série, na ordem em que marcou.
+  interessados: string[];
+  // A reação que vocês mais usaram na série, contando só o que não é spoiler para você.
+  // Null enquanto houver poucas reações.
+  emojiDaSerie: string | null;
+}
+
+export interface SeriesInterest {
+  interessados: string[];
+}
+
+// Avisos no Telegram (o bot manda ao par o que você fez no app):
+// - unavailable: a API está sem bot, então a seção nem aparece;
+// - off: nunca conectou;
+// - pending: tocou em "Conectar" e ainda não tocou em "Iniciar" no Telegram;
+// - on: recebendo avisos;
+// - paused: conectado, com os avisos desligados (pelo app, pelo /parar ou porque o bot
+//   foi bloqueado).
+export type TelegramStatus = 'unavailable' | 'off' | 'pending' | 'on' | 'paused';
+
+export interface TelegramState {
+  status: TelegramStatus;
+  // O @ da pessoa no Telegram (sem a arroba), quando ela tem um.
+  username: string | null;
+  // O @ do bot, sem a arroba.
+  botUsername: string | null;
+  // Só em "pending": o link que abre a conversa com o bot já com o código de conexão.
+  linkUrl?: string;
 }
 
 export interface EpisodePosition {
   temporada: number;
   episodio: number;
+}
+
+// Um episódio com a data de exibição, só o dia ('2026-10-16'): ver parseAirDate.
+export interface AiringEpisode extends EpisodePosition {
+  dataExibicao: string | null;
 }
 
 export interface MemberProgress {

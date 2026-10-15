@@ -11,6 +11,8 @@ interface ToneClasses {
   ring: string;
   // Fundo suave + texto: avatar com inicial e pílulas.
   soft: string;
+  // Texto e ícone na cor da pessoa: o coração do "quero ver".
+  text: string;
 }
 
 // Único lugar que conhece as cores de pessoa. As classes ficam escritas por extenso
@@ -21,11 +23,19 @@ export const TONE_CLASSES: Record<PersonTone, ToneClasses> = {
     border: 'border-person-1',
     ring: 'ring-person-1',
     soft: 'bg-person-1-soft text-on-person-1-soft',
+    text: 'text-person-1',
   },
   two: {
     solid: 'bg-person-2',
     border: 'border-person-2',
     ring: 'ring-person-2',
     soft: 'bg-person-2-soft text-on-person-2-soft',
+    text: 'text-person-2',
   },
+};
+
+// Como cada cor é chamada nos textos ("Sua cor na dupla: roxo").
+export const TONE_NAMES: Record<PersonTone, string> = {
+  one: 'roxo',
+  two: 'âmbar',
 };

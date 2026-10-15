@@ -97,11 +97,3 @@ export function getLastActivityAt(progress: SeriesProgress): number {
     return Math.max(latest, new Date(member.ultimoAssistidoEm).getTime());
   }, 0);
 }
-
-// Alguém já começou e ainda não terminaram juntos.
-export function isInProgress(progress: SeriesProgress): boolean {
-  const started = progress.membros.some((member) => member.assistidos > 0);
-  const finishedTogether =
-    progress.totalEpisodios > 0 && progress.emComum.assistidos >= progress.totalEpisodios;
-  return started && !finishedTogether;
-}

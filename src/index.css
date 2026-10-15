@@ -51,6 +51,15 @@
   --color-together-soft: #9e0059;
   --color-on-together: #1f0710;
 
+  /* Recado (balão de fala no card da dupla): branco gelo, letra preta */
+  --color-note: #e6e3e8;
+  --color-on-note: #111013;
+
+  /* Telegram: cor de outra marca, só no logo e no botão de conectar. Texto escuro por
+     cima, como no accent: branco nesse azul não tem contraste suficiente. */
+  --color-telegram: #229ed9;
+  --color-on-telegram: #04131c;
+
   /* Estados */
   --color-danger: #ff6b6b;
 
