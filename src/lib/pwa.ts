@@ -66,8 +66,10 @@ export function setupPwa() {
     setInstallState({ promptEvent: null, isInstalled: true });
   });
 
-  // Em desenvolvimento ele só atrapalharia: o Vite troca os arquivos a cada edição.
-  if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  // Também em desenvolvimento: sem ele não há push para testar. Ele não atrapalha o Vite, que
+  // serve tudo fora de /assets (o único caminho que o service worker guarda), e as páginas
+  // vêm sempre da rede primeiro.
+  if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('/sw.js').catch((error: unknown) => {
         console.error('Não foi possível registrar o service worker', error);

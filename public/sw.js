@@ -8,9 +8,11 @@
 // - Fontes do Google: do cache; o CSS delas se atualiza em segundo plano.
 // - Todo o resto (API, Supabase, pôsteres do TMDB) passa direto, sem cache aqui.
 //
+// Também mostra os avisos por push (fim do arquivo).
+//
 // Mudou este arquivo? Aumente o VERSION: é ele que faz os celulares trocarem de versão.
 
-const VERSION = 1;
+const VERSION = 2;
 const SHELL_CACHE = `watchmate-shell-v${VERSION}`;
 const ASSETS_CACHE = 'watchmate-assets';
 const FONTS_CACHE = 'watchmate-fonts';
@@ -144,6 +146,64 @@ function withTimeout(promise, ms) {
       },
     );
   });
+}
+
+// ---------- Avisos por push ----------
+// A API manda { title, body, path, tag, image } (ver watchmate-api, src/push). O aviso
+// aparece mesmo com o app fechado e o celular bloqueado; tocar nele abre a tela certa.
+// Avisos com a mesma tag se substituem: dez episódios seguidos viram um aviso só.
+
+const APP_HOME = '/my-list';
+
+self.addEventListener('push', (event) => {
+  const message = readPush(event);
+  event.waitUntil(
+    self.registration.showNotification(message.title, {
+      body: message.body,
+      icon: '/icons/icon-192.png',
+      // O ícone pequeno da barra de status do Android: só a silhueta conta.
+      badge: '/icons/badge-96.png',
+      image: message.image,
+      tag: message.tag,
+      data: { path: message.path },
+      lang: 'pt-BR',
+    }),
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(openApp(event.notification.data?.path ?? APP_HOME));
+});
+
+// Conteúdo estranho não quebra nada: vira um aviso genérico que abre a lista.
+function readPush(event) {
+  let data = {};
+  try {
+    data = event.data?.json() ?? {};
+  } catch {
+    // Sem conteúdo legível.
+  }
+  return {
+    title: typeof data.title === 'string' && data.title ? data.title : 'WatchMate',
+    body: typeof data.body === 'string' ? data.body : '',
+    path: typeof data.path === 'string' && data.path.startsWith('/') ? data.path : APP_HOME,
+    tag: typeof data.tag === 'string' ? data.tag : undefined,
+    image: typeof data.image === 'string' ? data.image : undefined,
+  };
+}
+
+// Com o app aberto, traz ele para a frente e leva até a tela, sem recarregar (o app ouve a
+// mensagem; ver useNotificationNavigation). Fechado, abre direto nela.
+async function openApp(path) {
+  const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+  const app = windows.find((client) => new URL(client.url).origin === self.location.origin);
+  if (app) {
+    await app.focus();
+    app.postMessage({ type: 'navigate', path });
+    return;
+  }
+  await self.clients.openWindow(path);
 }
 
 // Só aparece se a pessoa abrir o app sem internet antes de ele ter guardado a cópia.

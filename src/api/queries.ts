@@ -4,6 +4,7 @@ import { episodeService } from '@/api/services/episodeService';
 import { groupService } from '@/api/services/groupService';
 import { meService } from '@/api/services/meService';
 import { progressService } from '@/api/services/progressService';
+import { pushService } from '@/api/services/pushService';
 import { seriesService } from '@/api/services/seriesService';
 import { telegramService } from '@/api/services/telegramService';
 import type { AvatarStyleId } from '@/lib/avatarStyles';
@@ -25,6 +26,16 @@ export const avatarQueries = {
       queryFn: async () => (await import('@/lib/avatar')).renderAvatar(style, seed),
       staleTime: Infinity,
       gcTime: Infinity,
+    }),
+};
+
+export const pushQueries = {
+  // A chave só muda num deploy da API: uma busca por abertura do app basta.
+  publicKey: () =>
+    queryOptions({
+      queryKey: queryKeys.push.publicKey(),
+      queryFn: pushService.getPublicKey,
+      staleTime: Infinity,
     }),
 };
 
