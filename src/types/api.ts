@@ -29,7 +29,13 @@ export interface Group {
   membros: GroupMember[];
 }
 
-export interface GroupMemberSummary {
+// Recado que o membro deixa para o par. Os dois são null juntos (sem recado).
+export interface NoteFields {
+  recado: string | null;
+  recadoEm: string | null;
+}
+
+export interface GroupMemberSummary extends NoteFields {
   // Ordem de entrada no grupo: define a cor fixa de cada pessoa (ver buildCouple).
   entrouEm: string;
   usuario: AvatarFields & {

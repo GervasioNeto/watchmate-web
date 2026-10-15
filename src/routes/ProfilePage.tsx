@@ -3,23 +3,28 @@ import { Navigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 import { AppHeader } from '@/components/AppHeader';
 import { AvatarPicker } from '@/components/profile/AvatarPicker';
-import { CoupleHero } from '@/components/profile/CoupleHero';
-import { EditableTextRow, SettingsList, SettingsRow } from '@/components/profile/SettingsList';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
+import {
+  EditableTextRow,
+  SettingsLinkRow,
+  SettingsList,
+  SettingsRow,
+} from '@/components/ui/SettingsList';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useCouple } from '@/hooks/useCouple';
-import { useGroup, usePatchGroup } from '@/hooks/useGroup';
+import { useGroup } from '@/hooks/useGroup';
 import { useMe, usePatchMe } from '@/hooks/useMe';
 import { AVATAR_STYLES } from '@/lib/avatarStyles';
 import { supabase } from '@/lib/supabase';
 
+// O perfil é sobre você: avatar, nome, e-mail e sair. O que é da dupla (nome do grupo,
+// convite, números) fica na página da dupla; daqui sai uma linha para lá.
 export function ProfilePage() {
   const { data: me } = useMe();
   const { me: mePerson, partner } = useCouple();
   const { data: group, isLoading: isGroupLoading } = useGroup();
   const patchMe = usePatchMe();
-  const patchGroup = usePatchGroup();
   const [isPickingAvatar, setIsPickingAvatar] = useState(false);
   const avatarPickerId = useId();
 
@@ -32,19 +37,9 @@ export function ProfilePage() {
       <AppHeader />
 
       <main className="mx-auto flex max-w-xl flex-col gap-8 px-4 pt-6 pb-16">
-        {mePerson && group ? (
-          <CoupleHero
-            me={mePerson}
-            partner={partner}
-            groupName={group.nome}
-            since={group.criadoEm}
-            inviteCode={partner ? null : group.codigoConvite}
-          />
-        ) : (
-          <Skeleton className="h-72 rounded-lg" />
-        )}
+        <h1 className="text-2xl leading-tight font-extrabold tracking-tight">Perfil</h1>
 
-        {mePerson && me && (
+        {mePerson && me ? (
           <SettingsList title="Você">
             <SettingsRow
               label="Avatar"
@@ -81,26 +76,24 @@ export function ProfilePage() {
               <span className="block truncate">{me.email}</span>
             </SettingsRow>
           </SettingsList>
+        ) : (
+          <Skeleton className="h-56 rounded-lg" />
         )}
 
-        {group && (
+        {mePerson && group && (
           <SettingsList title="A dupla">
-            <EditableTextRow
-              label="Nome do grupo"
-              value={group.nome ?? ''}
-              placeholder="Dê um nome para a dupla"
-              onSave={(value) => patchGroup.mutateAsync(value)}
-            />
-            <SettingsRow label="Seu par">
-              {partner ? (
-                <span className="flex items-center gap-2">
-                  <Avatar person={partner} size="sm" />
-                  <span className="truncate">{partner.name}</span>
+            <SettingsLinkRow
+              to="/couple"
+              label={partner ? `Você e ${partner.shortName}` : 'Seu par ainda não entrou'}
+            >
+              <span className="flex items-center gap-2">
+                <span aria-hidden className="flex shrink-0">
+                  <Avatar person={mePerson} size="sm" className="ring-2 ring-canvas" />
+                  <Avatar person={partner} size="sm" className="-ml-2 ring-2 ring-canvas" />
                 </span>
-              ) : (
-                <span className="text-fg-subtle">Ainda não entrou. O código está lá em cima.</span>
-              )}
-            </SettingsRow>
+                <span className="truncate">{group.nome ?? 'Sem nome'}</span>
+              </span>
+            </SettingsLinkRow>
           </SettingsList>
         )}
 

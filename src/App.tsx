@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from '@/context/AuthContext';
 import { AddSeriesPage } from '@/routes/AddSeriesPage';
+import { CouplePage } from '@/routes/CouplePage';
 import { HomePage } from '@/routes/HomePage';
 import { LoginPage } from '@/routes/LoginPage';
 import { MyListPage } from '@/routes/MyListPage';
@@ -49,6 +50,14 @@ function App() {
               element={
                 <RequireAuth>
                   <SeriesDetailPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/couple"
+              element={
+                <RequireAuth>
+                  <CouplePage />
                 </RequireAuth>
               }
             />

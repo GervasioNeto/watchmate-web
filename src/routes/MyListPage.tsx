@@ -1,36 +1,26 @@
 import { Navigate, useNavigate } from 'react-router-dom';
-import { Plus } from 'lucide-react';
 import { AppHeader } from '@/components/AppHeader';
+import { CoupleCard } from '@/components/couple/CoupleCard';
 import { InviteCode } from '@/components/InviteCode';
 import { ContinueWatchingCard } from '@/components/series/ContinueWatchingCard';
 import { SERIES_GRID } from '@/components/series/seriesGrid';
 import { SeriesLibrary } from '@/components/series/SeriesLibrary';
-import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useCouple } from '@/hooks/useCouple';
 import { useGroup } from '@/hooks/useGroup';
-import { useSeries } from '@/hooks/useSeries';
-import { useSeriesProgressList } from '@/hooks/useSeriesProgress';
+import { useListEntries } from '@/hooks/useListEntries';
 import { getLastActivityAt, isInProgress } from '@/lib/progress';
-import type { ListEntry } from '@/lib/seriesFilters';
 
 export function MyListPage() {
   const navigate = useNavigate();
   const { me, partner } = useCouple();
   const { data: group, isLoading: isGroupLoading } = useGroup();
-  const { data: series, isLoading: isSeriesLoading } = useSeries();
-  const progressQueries = useSeriesProgressList((series ?? []).map((item) => item.id));
+  const { entries, isSeriesLoading, isProgressLoading } = useListEntries();
 
   if (!isGroupLoading && group === null) {
     return <Navigate to="/onboarding" replace />;
   }
-
-  const entries: ListEntry[] = (series ?? []).map((item, index) => ({
-    series: item,
-    progress: progressQueries[index]?.data,
-  }));
-  const isProgressLoading = progressQueries.some((query) => query.isPending);
 
   // A série em andamento com a marcação mais recente de qualquer um dos dois.
   const continueWatching = entries
@@ -44,21 +34,12 @@ export function MyListPage() {
       <AppHeader />
 
       <main className="mx-auto flex max-w-5xl flex-col gap-8 px-4 pt-6 pb-16">
-        <div className="flex items-end justify-between gap-4">
-          <div className="flex min-w-0 flex-col gap-2">
-            <div className="flex">
-              <Avatar person={me} size="sm" className="ring-2 ring-canvas" />
-              <Avatar person={partner} size="sm" className="-ml-2 ring-2 ring-canvas" />
-            </div>
-            <h1 className="truncate text-2xl font-extrabold tracking-tight">
-              {group?.nome ?? 'Lista de vocês'}
-            </h1>
-          </div>
-          <Button size="sm" onClick={goToAdd}>
-            <Plus size={16} aria-hidden />
-            Adicionar
-          </Button>
-        </div>
+        <CoupleCard
+          groupName={group?.nome ?? 'Lista de vocês'}
+          entries={entries}
+          isProgressLoading={isProgressLoading}
+          onAdd={goToAdd}
+        />
 
         {group && me && !partner && (
           <section className="flex flex-col gap-1 rounded-lg border border-line p-4">

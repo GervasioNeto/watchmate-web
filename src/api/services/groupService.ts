@@ -1,5 +1,5 @@
 import { api, ApiError } from '@/api/client';
-import type { Group } from '@/types/api';
+import type { Group, GroupMember, NoteFields } from '@/types/api';
 
 export const groupService = {
   // 404 means the user hasn't joined a group yet — not an error for the UI.
@@ -16,4 +16,7 @@ export const groupService = {
   create: () => api.post<Group>('/groups'),
   join: (codigoConvite: string) => api.post<Group>('/groups/join', { codigoConvite }),
   updateName: (nome: string) => api.patch<Group>('/groups/me', { nome }),
+  // The caller's note to their partner. Returns the caller's membership with the new note.
+  saveNote: (texto: string) => api.put<GroupMember & NoteFields>('/groups/me/note', { texto }),
+  clearNote: () => api.delete<void>('/groups/me/note'),
 };
