@@ -23,7 +23,7 @@ interface SeasonTrackProps {
   className?: string;
 }
 
-// A temporada em contas, uma por episódio, nas cores da dupla: rosa o que viram juntos,
+// A temporada em contas, uma por episódio, nas cores da dupla: laranja o que viram juntos,
 // metade de cada cor o que cada um viu na sua hora, a cor de quem viu sozinho. O que falta
 // ver fica cinza; o que ainda não saiu é só um fio.
 export function SeasonTrack({ track, me, partner, className }: SeasonTrackProps) {

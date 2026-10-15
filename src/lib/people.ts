@@ -1,5 +1,5 @@
 import { isAvatarStyle, type AvatarStyleId } from '@/lib/avatarStyles';
-import type { PersonTone } from '@/lib/personTone';
+import { DEFAULT_TONES, isPersonTone, PERSON_TONES, type PersonTone } from '@/lib/personTone';
 import type { AvatarFields, GroupMemberSummary, Me } from '@/types/api';
 
 // Como a pessoa é chamada ("Você" ou o nome). Depende de quem está olhando.
@@ -38,15 +38,26 @@ export function displayName(
   return emailName || fallback;
 }
 
-// Quem entrou primeiro no grupo (normalmente quem criou) fica com a cor `one`, o
-// outro com `two`. O id desempata, para os dois celulares chegarem sempre no mesmo resultado.
-function toneByJoinOrder(members: GroupMemberSummary[]): (userId: string) => PersonTone {
-  const order = [...members]
-    .sort(
-      (a, b) => a.entrouEm.localeCompare(b.entrouEm) || a.usuario.id.localeCompare(b.usuario.id),
-    )
-    .map((member) => member.usuario.id);
-  return (userId) => (order.indexOf(userId) === 1 ? 'two' : 'one');
+// A cor de cada um é a que escolheu no perfil (a API garante que os dois não repitam).
+// Por segurança, uma cor guardada que não está na paleta (uma que saiu do app) ou que
+// repete a de quem entrou antes cai na primeira cor padrão livre. A ordem de entrada, com
+// o id desempatando, faz os dois celulares chegarem sempre no mesmo resultado.
+function toneByMember(members: GroupMemberSummary[]): (userId: string) => PersonTone {
+  const ordered = [...members].sort(
+    (a, b) => a.entrouEm.localeCompare(b.entrouEm) || a.usuario.id.localeCompare(b.usuario.id),
+  );
+  const tones = new Map<string, PersonTone>();
+  for (const member of ordered) {
+    const taken = new Set(tones.values());
+    const fallback = [...DEFAULT_TONES, ...PERSON_TONES].find((tone) => !taken.has(tone));
+    tones.set(
+      member.usuario.id,
+      isPersonTone(member.cor) && !taken.has(member.cor)
+        ? member.cor
+        : (fallback ?? DEFAULT_TONES[0]),
+    );
+  }
+  return (userId) => tones.get(userId) ?? DEFAULT_TONES[0];
 }
 
 function toPerson(
@@ -73,7 +84,7 @@ function toPerson(
 
 export function buildCouple(me: Me | undefined): Couple {
   const members = me?.membroDoGrupo?.grupo.membros ?? [];
-  const toneOf = toneByJoinOrder(members);
+  const toneOf = toneByMember(members);
 
   const mePerson = me ? toPerson(me, 'me', toneOf(me.id)) : null;
   const partnerUser = me

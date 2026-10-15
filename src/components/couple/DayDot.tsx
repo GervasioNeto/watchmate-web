@@ -15,7 +15,7 @@ interface DayDotProps {
   children?: ReactNode;
 }
 
-// Um dia pintado com as cores da dupla: rosa quando viram juntos, metade de cada cor
+// Um dia pintado com as cores da dupla: laranja quando viram juntos, metade de cada cor
 // quando cada um viu na sua hora, a cor de quem viu quando foi só uma pessoa.
 // Único lugar que traduz um dia em cor; a semana, o mês e o card usam este componente.
 export function DayDot({ day, me, partner, className, emptyClassName, children }: DayDotProps) {

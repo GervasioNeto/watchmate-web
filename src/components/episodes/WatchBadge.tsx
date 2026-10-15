@@ -2,7 +2,7 @@ import { cx } from '@/lib/cx';
 import { TONE_CLASSES } from '@/lib/personTone';
 import type { WatchBadge as WatchBadgeData } from '@/lib/watchBadge';
 
-// Pílula de quem viu o episódio: rosa para "juntos", neutra para "os dois" e a cor
+// Pílula de quem viu o episódio: laranja para "juntos", neutra para "os dois" e a cor
 // da pessoa quando só uma viu. O texto curto é visual; a frase completa vai para o
 // leitor de tela.
 export function WatchBadge({ badge }: { badge: WatchBadgeData }) {

@@ -1,16 +1,19 @@
 import { useId } from 'react';
 import { Link } from 'react-router-dom';
-import { Check, ChevronRight, Pencil } from 'lucide-react';
+import { ChevronRight, Pencil } from 'lucide-react';
 import { Avatar } from '@/components/ui/Avatar';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { pluralEpisodes } from '@/lib/coupleSummary';
 import { cx } from '@/lib/cx';
 import { formatMonth } from '@/lib/dates';
 import type { Person } from '@/lib/people';
-import { TONE_CLASSES, TONE_NAMES } from '@/lib/personTone';
+import { TONE_CLASSES, toneName } from '@/lib/personTone';
 import type { ProfileHighlights } from '@/lib/profileHighlights';
 import { tmdbPosterUrl } from '@/lib/tmdb';
 import type { TrackedSeries } from '@/types/api';
+
+// O que o ingresso deixa trocar, cada um na sua folha (modal): o avatar e a cor.
+export type ProfileEditor = 'avatar' | 'color';
 
 interface ProfileTicketProps {
   me: Person;
@@ -18,9 +21,10 @@ interface ProfileTicketProps {
   memberSince: Date;
   // null enquanto o progresso das séries carrega.
   highlights: ProfileHighlights | null;
-  isPickingAvatar: boolean;
-  avatarPickerId: string;
-  onToggleAvatarPicker: () => void;
+  // A folha aberta agora, para os botões dizerem que estão abertos (aria-expanded).
+  openEditor: ProfileEditor | null;
+  // Abre a folha; o botão que abriu recebe o foco de volta quando ela fechar.
+  onOpenEditor: (editor: ProfileEditor, trigger: HTMLElement) => void;
 }
 
 // O topo do perfil é um ingresso: em cima, quem você é (avatar, nome e a sua cor na
@@ -30,9 +34,8 @@ export function ProfileTicket({
   partner,
   memberSince,
   highlights,
-  isPickingAvatar,
-  avatarPickerId,
-  onToggleAvatarPicker,
+  openEditor,
+  onOpenEditor,
 }: ProfileTicketProps) {
   const nameId = useId();
   const tone = TONE_CLASSES[me.tone];
@@ -48,17 +51,13 @@ export function ProfileTicket({
           />
           <button
             type="button"
-            onClick={onToggleAvatarPicker}
-            aria-expanded={isPickingAvatar}
-            aria-controls={isPickingAvatar ? avatarPickerId : undefined}
-            aria-label={isPickingAvatar ? 'Fechar a escolha de avatar' : 'Trocar avatar'}
+            onClick={(event) => onOpenEditor('avatar', event.currentTarget)}
+            aria-haspopup="dialog"
+            aria-expanded={openEditor === 'avatar'}
+            aria-label="Trocar avatar"
             className="absolute -right-2 -bottom-2 flex h-9 w-9 items-center justify-center rounded-full bg-fg text-canvas ring-4 ring-surface transition-transform hover:scale-105"
           >
-            {isPickingAvatar ? (
-              <Check size={18} strokeWidth={2.5} aria-hidden />
-            ) : (
-              <Pencil size={15} strokeWidth={2.5} aria-hidden />
-            )}
+            <Pencil size={15} strokeWidth={2.5} aria-hidden />
           </button>
         </div>
 
@@ -73,18 +72,24 @@ export function ProfileTicket({
         </div>
 
         <div className="flex flex-col items-center gap-1.5">
-          <p
+          {/* O selo abre a escolha de cor: é aqui que a pessoa descobre que pode trocar. */}
+          <button
+            type="button"
+            onClick={(event) => onOpenEditor('color', event.currentTarget)}
+            aria-haspopup="dialog"
+            aria-expanded={openEditor === 'color'}
             className={cx(
-              'inline-flex items-center gap-2 rounded-full py-1 pr-3 pl-2 text-xs font-semibold',
+              'inline-flex min-h-8 items-center gap-2 rounded-full py-1 pr-2.5 pl-2 text-xs font-semibold transition-[filter] hover:brightness-125',
               tone.soft,
             )}
           >
             <span aria-hidden className={cx('h-2.5 w-2.5 rounded-full', tone.solid)} />
-            {partner ? 'Sua cor na dupla' : 'Sua cor'}: {TONE_NAMES[me.tone]}
-          </p>
-          <p className="max-w-72 text-xs leading-relaxed text-fg-muted text-balance">
+            {partner ? 'Sua cor na dupla' : 'Sua cor'}: {toneName(me.tone)}
+            <Pencil size={12} strokeWidth={2.5} aria-hidden className="opacity-80" />
+          </button>
+          <p className="max-w-72 text-xs leading-relaxed text-balance text-fg-muted">
             {partner
-              ? `É a cor do que você vê sem ${partner.shortName}, nas séries e no calendário. O que vocês veem juntos fica rosa.`
+              ? `É a cor do que você vê sem ${partner.shortName}, nas séries e no calendário. O que vocês veem juntos fica no laranja do WatchMate.`
               : 'É a cor dos seus episódios nas séries e no calendário.'}
           </p>
         </div>
@@ -177,7 +182,7 @@ interface TogetherShareProps {
   highlights: ProfileHighlights;
 }
 
-// Quanto do que você viu foi junto: a mesma barra das séries (rosa juntos, a sua cor o
+// Quanto do que você viu foi junto: a mesma barra das séries (laranja juntos, a sua cor o
 // que você viu sem o par), com a porcentagem em destaque.
 function TogetherShare({ me, partner, highlights }: TogetherShareProps) {
   const { watched, together } = highlights;
