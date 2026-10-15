@@ -1,27 +1,16 @@
 import { isAwaitingPremiere } from '@/lib/airing';
-import { countInterested, getCoupleInterest } from '@/lib/interest';
-import type { Person } from '@/lib/people';
 import type { ListEntry } from '@/lib/seriesFilters';
 
 // Sorteio com uma opção só não tem graça: abaixo disso, não há sorteio.
 export const MIN_DRAW_POOL = 2;
 
-// De onde sai o sorteio de "Para começar": as que os dois querem ver; se forem poucas, as
-// que algum de vocês quer; se ainda assim não der, todas as da fila. Série que não estreou
-// fica de fora: não dá para começar hoje.
-export function getDrawPool(
-  entries: ListEntry[],
-  me: Person,
-  partner: Person | null,
-  now: Date,
-): ListEntry[] {
+// De onde sai o sorteio de "Para começar": todas as da fila, cada uma com a mesma chance.
+// O "Quero ver" não pesa aqui (ele já ordena a fila); com ele pesando, duas marcadas pelos
+// dois acabavam sendo as únicas da roleta. Série que não estreou fica de fora: não dá para
+// começar hoje.
+export function getDrawPool(entries: ListEntry[], now: Date): ListEntry[] {
   const available = entries.filter((entry) => !isAwaitingPremiere(entry.series, now));
-  const wantedBy = (min: number) =>
-    available.filter(
-      (entry) => countInterested(getCoupleInterest(entry.series, me, partner)) >= min,
-    );
-  const pools = [wantedBy(partner ? 2 : 1), wantedBy(1), available];
-  return pools.find((pool) => pool.length >= MIN_DRAW_POOL) ?? [];
+  return available.length >= MIN_DRAW_POOL ? available : [];
 }
 
 export interface DrawStep {

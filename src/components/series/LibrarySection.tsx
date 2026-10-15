@@ -58,9 +58,9 @@ export function LibrarySection({ title, entries, action, highlightedId }: Librar
 // acende os cards um a um até parar na sorteada, e aí abre a série.
 export function ToStartSection({ title, entries }: { title: string; entries: ListEntry[] }) {
   const navigate = useNavigate();
-  const { me, partner } = useCouple();
+  const { partner } = useCouple();
   const draw = useSeriesDraw();
-  const pool = me ? getDrawPool(entries, me, partner, new Date()) : [];
+  const pool = getDrawPool(entries, new Date());
 
   const winner = entries.find((entry) => entry.series.id === draw.winnerId);
   const label = winner
