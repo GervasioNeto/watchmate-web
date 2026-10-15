@@ -46,7 +46,7 @@ export function SeriesDetailPage() {
 
   if (!series) {
     return (
-      <div className="mx-auto flex min-h-svh max-w-sm flex-col justify-center gap-4 px-4">
+      <div className="mx-auto flex min-h-[70svh] max-w-sm flex-col justify-center gap-4 px-4">
         <h1 className="text-xl font-bold">Série não encontrada</h1>
         <p className="text-sm text-fg-muted">Ela pode ter sido removida da lista de vocês.</p>
         <Button variant="secondary" onClick={() => navigate('/my-list')} className="self-start">

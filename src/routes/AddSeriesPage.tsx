@@ -35,9 +35,12 @@ export function AddSeriesPage() {
   const hasQuery = debouncedQuery.trim().length > 0;
 
   return (
-    <div className="mx-auto min-h-svh max-w-2xl">
-      <header className="sticky top-0 z-10 flex items-center gap-2 border-b border-line bg-canvas px-2 py-2.5">
-        <BackButton />
+    <div className="mx-auto max-w-2xl">
+      <header className="sticky top-0 z-10 flex items-center gap-2 border-b border-line bg-canvas px-4 py-2.5 md:px-2">
+        {/* No celular a busca é um destino da barra de baixo: não tem "voltar". */}
+        <div className="hidden md:block">
+          <BackButton />
+        </div>
         <label className="flex min-h-11 flex-1 items-center gap-2 rounded-md border border-line bg-surface-2 px-3 focus-within:outline-2 focus-within:outline-accent">
           <Search size={18} aria-hidden className="shrink-0 text-fg-subtle" />
           <span className="sr-only">Buscar série</span>

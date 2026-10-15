@@ -9,6 +9,7 @@ export function useMonthParam(first: Date, current: Date) {
   const requested = parseMonthKey(params.get('mes'));
   const month = requested && requested >= first && requested <= current ? requested : current;
 
+  // Trocar de mês não é ir para outra página: a tela fica onde está (ver useListFilters).
   const goTo = (target: Date) => {
     setParams(
       (previous) => {
@@ -17,7 +18,7 @@ export function useMonthParam(first: Date, current: Date) {
         else next.set('mes', toMonthKey(target));
         return next;
       },
-      { replace: true },
+      { replace: true, preventScrollReset: true },
     );
   };
 

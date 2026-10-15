@@ -114,7 +114,8 @@ export function EpisodesSection({ series, progress }: EpisodesSectionProps) {
           }))}
           value={String(season)}
           onChange={(value) => setSeasonOverride(Number(value))}
-          className="-mx-4 px-4 pb-1"
+          bleed
+          className="pb-1"
         />
       )}
 

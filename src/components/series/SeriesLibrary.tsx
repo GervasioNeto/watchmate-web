@@ -104,7 +104,7 @@ export function SeriesLibrary({ entries, isProgressLoading }: SeriesLibraryProps
           options={progressOptions}
           value={filters.progress}
           onChange={filters.setProgress}
-          className="-mx-4 px-4"
+          bleed
         />
         {showKinds && (
           <ChipGroup
@@ -113,7 +113,7 @@ export function SeriesLibrary({ entries, isProgressLoading }: SeriesLibraryProps
             options={kindOptions}
             value={filters.kind}
             onChange={filters.setKind}
-            className="-mx-4 px-4"
+            bleed
           />
         )}
       </div>

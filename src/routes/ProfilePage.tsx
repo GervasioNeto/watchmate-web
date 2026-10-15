@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 import { AppHeader } from '@/components/AppHeader';
-import { BackButton } from '@/components/BackButton';
 import { CoupleAvatars } from '@/components/couple/CoupleAvatars';
 import { AvatarPicker } from '@/components/profile/AvatarPicker';
 import { ColorPicker } from '@/components/profile/ColorPicker';
+import { InstallAppSection } from '@/components/profile/InstallAppSection';
 import { ProfileTicket, type ProfileEditor } from '@/components/profile/ProfileTicket';
 import { TelegramSection } from '@/components/profile/TelegramSettings';
 import { Button } from '@/components/ui/Button';
@@ -25,7 +25,8 @@ import { formatMonth } from '@/lib/dates';
 import { supabase } from '@/lib/supabase';
 
 // O perfil é sobre você: em cima, o ingresso (quem você é, a sua cor na dupla e os seus
-// números); embaixo, os ajustes da conta, a entrada para a página da dupla e os avisos.
+// números); embaixo, os ajustes da conta, a entrada para a página da dupla, os avisos e a
+// instalação como app.
 export function ProfilePage() {
   const { data: me } = useMe();
   const { me: mePerson, partner } = useCouple();
@@ -54,26 +55,22 @@ export function ProfilePage() {
   );
 
   return (
-    <div className="min-h-svh">
+    <>
       <AppHeader />
 
       <main className="mx-auto flex max-w-xl flex-col gap-8 px-4 pt-6 pb-16">
-        {/* O botão vem antes no DOM (primeiro no Tab) e fica por cima do canto do ingresso. */}
-        <div className="relative">
-          <BackButton className="absolute top-2 left-2 z-10" />
-          {mePerson && me ? (
-            <ProfileTicket
-              me={mePerson}
-              partner={partner}
-              memberSince={new Date(me.criadoEm)}
-              highlights={highlights}
-              openEditor={openEditor}
-              onOpenEditor={openSheet}
-            />
-          ) : (
-            <Skeleton className="h-112 rounded-lg" />
-          )}
-        </div>
+        {mePerson && me ? (
+          <ProfileTicket
+            me={mePerson}
+            partner={partner}
+            memberSince={new Date(me.criadoEm)}
+            highlights={highlights}
+            openEditor={openEditor}
+            onOpenEditor={openSheet}
+          />
+        ) : (
+          <Skeleton className="h-112 rounded-lg" />
+        )}
 
         {mePerson && (
           <>
@@ -144,6 +141,8 @@ export function ProfilePage() {
 
         <TelegramSection />
 
+        <InstallAppSection />
+
         <Button
           variant="ghost"
           onClick={() => supabase.auth.signOut()}
@@ -153,6 +152,6 @@ export function ProfilePage() {
           Sair da conta
         </Button>
       </main>
-    </div>
+    </>
   );
 }
