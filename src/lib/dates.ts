@@ -43,6 +43,11 @@ export function formatMonth(date: Date): string {
   return date.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
 }
 
+// Dias de calendário de `now` até `date`: amanhã é 1, hoje é 0, ontem é -1.
+export function calendarDaysUntil(date: Date, now: Date): number {
+  return Math.round((startOfDay(date).getTime() - startOfDay(now).getTime()) / 86400000);
+}
+
 // "agora", "há 5 min", "há 2 h", "ontem", "há 3 dias" e, depois de uma semana, a data.
 export function formatTimeAgo(date: Date, now: Date): string {
   const minutes = Math.floor((now.getTime() - date.getTime()) / 60000);
@@ -50,8 +55,18 @@ export function formatTimeAgo(date: Date, now: Date): string {
   if (minutes < 60) return `há ${minutes} min`;
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `há ${hours} h`;
-  const days = Math.round((startOfDay(now).getTime() - startOfDay(date).getTime()) / 86400000);
+  const days = -calendarDaysUntil(date, now);
   if (days === 1) return 'ontem';
   if (days < 7) return `há ${days} dias`;
   return date.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
+}
+
+// O outro lado: "hoje", "amanhã", o dia da semana até 6 dias ("sexta") e, depois, a data
+// curta ("12/11"), para caber embaixo de um pôster.
+export function formatUpcomingDay(date: Date, now: Date): string {
+  const days = calendarDaysUntil(date, now);
+  if (days <= 0) return 'hoje';
+  if (days === 1) return 'amanhã';
+  if (days < 7) return date.toLocaleDateString('pt-BR', { weekday: 'long' }).replace('-feira', '');
+  return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
 }

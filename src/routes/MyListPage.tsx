@@ -10,7 +10,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { useCouple } from '@/hooks/useCouple';
 import { useGroup } from '@/hooks/useGroup';
 import { useListEntries } from '@/hooks/useListEntries';
-import { getLastActivityAt, isInProgress } from '@/lib/progress';
+import { pickTonight } from '@/lib/listOrder';
 
 export function MyListPage() {
   const navigate = useNavigate();
@@ -22,10 +22,9 @@ export function MyListPage() {
     return <Navigate to="/onboarding" replace />;
   }
 
-  // A série em andamento com a marcação mais recente de qualquer um dos dois.
-  const continueWatching = entries
-    .filter((entry) => entry.progress && isInProgress(entry.progress))
-    .sort((a, b) => getLastActivityAt(b.progress!) - getLastActivityAt(a.progress!))[0];
+  // A série de hoje ("Hoje no sofá" ou "Continuar assistindo"). Espera todo o progresso,
+  // como a lista, para o atalho não trocar de série enquanto carrega.
+  const tonight = me && !isProgressLoading ? pickTonight(entries, me, partner, new Date()) : null;
 
   const goToAdd = () => navigate('/series/add');
 
@@ -62,12 +61,7 @@ export function MyListPage() {
           </div>
         ) : entries.length > 0 ? (
           <>
-            {continueWatching?.progress && (
-              <ContinueWatchingCard
-                series={continueWatching.series}
-                progress={continueWatching.progress}
-              />
-            )}
+            {tonight && <ContinueWatchingCard pick={tonight} />}
             <SeriesLibrary entries={entries} isProgressLoading={isProgressLoading} />
           </>
         ) : (

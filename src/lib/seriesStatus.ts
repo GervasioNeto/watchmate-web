@@ -11,3 +11,8 @@ export function statusLabel(status: string | null): string | null {
   if (!status) return null;
   return STATUS_LABELS[status] ?? status;
 }
+
+// Série que ainda pode ganhar episódios. Sem status conhecido, conta como encerrada.
+export function isOngoing(status: string | null): boolean {
+  return !!status && status !== 'Ended' && status !== 'Canceled';
+}

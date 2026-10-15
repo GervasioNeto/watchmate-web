@@ -1,6 +1,5 @@
 import { ChevronDown } from 'lucide-react';
-import { SERIES_GRID } from '@/components/series/seriesGrid';
-import { SeriesCard } from '@/components/series/SeriesCard';
+import { SeriesGrid } from '@/components/series/LibrarySection';
 import type { ListEntry } from '@/lib/seriesFilters';
 
 interface WatchedSeriesSectionProps {
@@ -35,13 +34,7 @@ export function WatchedSeriesSection({ entries, isOpen, onOpenChange }: WatchedS
         />
       </summary>
 
-      {isOpen && (
-        <div className={SERIES_GRID}>
-          {entries.map((entry) => (
-            <SeriesCard key={entry.series.id} series={entry.series} progress={entry.progress} />
-          ))}
-        </div>
-      )}
+      {isOpen && <SeriesGrid entries={entries} />}
     </details>
   );
 }
