@@ -2,11 +2,10 @@ import { useId, useState, type ReactNode } from 'react';
 import { Check, ChevronDown, ExternalLink, LoaderCircle, ShieldCheck } from 'lucide-react';
 import { TelegramLogo } from '@/components/profile/TelegramLogo';
 import { Button } from '@/components/ui/Button';
-import { SettingsList } from '@/components/ui/SettingsList';
 import { Switch } from '@/components/ui/Switch';
 import { useCouple } from '@/hooks/useCouple';
 import { useSeries } from '@/hooks/useSeries';
-import { useSetTelegram, useTelegramState } from '@/hooks/useTelegram';
+import { useSetTelegram } from '@/hooks/useTelegram';
 import { cx } from '@/lib/cx';
 import type { TelegramState } from '@/types/api';
 
@@ -14,20 +13,10 @@ import type { TelegramState } from '@/types/api';
 const TELEGRAM_BUTTON =
   'inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-telegram px-4 py-2.5 text-sm leading-tight font-semibold text-on-telegram transition-[filter] select-none hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50';
 
-// A seção "Avisos" do perfil. Some quando a API está sem bot.
-export function TelegramSection() {
-  const { data: state } = useTelegramState();
-  if (!state || state.status === 'unavailable') return null;
-  return (
-    <SettingsList title="Avisos">
-      <TelegramSettings state={state} />
-    </SettingsList>
-  );
-}
-
-// Uma linha que abre para baixo: fechada, mostra o estado; aberta, explica o que o bot faz
-// e conecta. Abre sozinha enquanto a conexão espera o "Iniciar" e quando ela dá certo.
-function TelegramSettings({ state }: { state: TelegramState }) {
+// A linha do Telegram na seção Avisos (ver AlertsSection). Abre para baixo: fechada, mostra
+// o estado; aberta, explica o que o bot faz e conecta. Abre sozinha enquanto a conexão
+// espera o "Iniciar" e quando ela dá certo.
+export function TelegramSettings({ state }: { state: TelegramState }) {
   const { partner } = useCouple();
   const setTelegram = useSetTelegram();
   const panelId = useId();
