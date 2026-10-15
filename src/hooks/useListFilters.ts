@@ -36,6 +36,8 @@ export function useListFilters() {
   // Toda mudança passa por uma única atualização. Chamar setParams duas vezes seguidas
   // perde a primeira: a forma de função parte dos parâmetros da renderização atual.
   // `replace`: mexer nos filtros não cria entradas novas no histórico do navegador.
+  // `preventScrollReset`: e não é ir para outra página, então a tela fica onde está (o
+  // ScrollRestoration do RootLayout levaria a página para o topo).
   function update(changes: Record<string, string | null>) {
     setParams(
       (previous) => {
@@ -46,7 +48,7 @@ export function useListFilters() {
         }
         return next;
       },
-      { replace: true },
+      { replace: true, preventScrollReset: true },
     );
   }
 

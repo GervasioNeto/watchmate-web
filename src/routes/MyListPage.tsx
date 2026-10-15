@@ -29,7 +29,7 @@ export function MyListPage() {
   const goToAdd = () => navigate('/series/add');
 
   return (
-    <div className="min-h-svh">
+    <>
       <AppHeader />
 
       <main className="mx-auto flex max-w-5xl flex-col gap-8 px-4 pt-6 pb-16">
@@ -74,6 +74,6 @@ export function MyListPage() {
           </section>
         )}
       </main>
-    </div>
+    </>
   );
 }
