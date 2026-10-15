@@ -7,15 +7,13 @@
  * abaixo, cada uma com um papel fixo. Uma classe como `text-neutral-400` não gera CSS
  * nenhum aqui — use os tokens semânticos.
  *
- * As cinco cores da marca continuam todas, cada uma com um trabalho:
- *   flame        → accent          (ações)
- *   ultramarine  → person-1-soft   (a primeira pessoa do grupo; clareada em `person-1`)
- *   amber        → person-2        (a segunda pessoa do grupo)
- *   fuchsia      → together        (o que vocês viram juntos; suavizada para não brigar com o laranja)
- *   raspberry    → together-soft   (fundo da família do "juntos")
+ * O laranja da marca (flame) tem dois trabalhos: as ações (accent) e o que vocês viram
+ * juntos (together).
  *
- * As cores de pessoa são fixas por pessoa (ordem de entrada no grupo), iguais nos dois
- * celulares. Componentes não usam esses tokens direto: passam por lib/personTone.ts.
+ * Cores de pessoa: uma paleta de tons vivos (`tone-*`), e cada pessoa escolhe a sua no
+ * perfil. O app garante que os dois da dupla nunca tenham a mesma, e a cor é a mesma nos
+ * dois celulares. Todas aceitam texto escuro por cima e ficam longe do laranja do
+ * "juntos". Componentes não usam esses tokens direto: passam por lib/personTone.ts.
  */
 @theme {
   --color-*: initial;
@@ -36,20 +34,77 @@
   --color-accent-hover: #ff6a21;
   --color-on-accent: #160a03;
 
-  /* Primeira pessoa do grupo (ultramarine) */
-  --color-person-1: #9d68f3;
-  --color-person-1-soft: #390099;
-  --color-on-person-1-soft: #ddd0ff;
+  /* Juntos: o laranja do WatchMate */
+  --color-together: var(--color-accent);
+  --color-on-together: var(--color-on-accent);
 
-  /* Segunda pessoa do grupo (amber) */
-  --color-person-2: #ffbd00;
-  --color-person-2-soft: #4d3a00;
-  --color-on-person-2-soft: #ffe7a3;
+  /* Cores de pessoa, na ordem do seletor (um degradê de matiz). Cada uma tem a cor cheia,
+     um fundo escuro (-soft, para selos e avatares com inicial) e um texto claro por cima
+     dele (on-…-soft). Os dois últimos saem da cor cheia por mistura, para a paleta inteira
+     seguir a mesma regra. */
+  --color-tone-raspberry: #ff4f7b;
+  --color-tone-bubblegum: #ff5cc8;
+  --color-tone-cotton: #ff9ecf;
+  --color-tone-magenta: #e05cff;
+  --color-tone-lilac: #c58bff;
+  --color-tone-violet: #9d68f3;
+  --color-tone-indigo: #7c83ff;
+  --color-tone-blue: #4d9bff;
+  --color-tone-sky: #3cc6ff;
+  --color-tone-turquoise: #2ee6d6;
+  --color-tone-mint: #3ef0a8;
+  --color-tone-green: #4bd66f;
+  --color-tone-lime: #b4f03a;
+  --color-tone-lemon: #f5e63c;
+  --color-tone-amber: #ffbd00;
 
-  /* Juntos (fuchsia + raspberry) */
-  --color-together: #ff3d77;
-  --color-together-soft: #9e0059;
-  --color-on-together: #1f0710;
+  --color-tone-raspberry-soft: color-mix(
+    in oklab,
+    var(--color-tone-raspberry) 32%,
+    var(--color-canvas)
+  );
+  --color-tone-bubblegum-soft: color-mix(
+    in oklab,
+    var(--color-tone-bubblegum) 32%,
+    var(--color-canvas)
+  );
+  --color-tone-cotton-soft: color-mix(in oklab, var(--color-tone-cotton) 32%, var(--color-canvas));
+  --color-tone-magenta-soft: color-mix(
+    in oklab,
+    var(--color-tone-magenta) 32%,
+    var(--color-canvas)
+  );
+  --color-tone-lilac-soft: color-mix(in oklab, var(--color-tone-lilac) 32%, var(--color-canvas));
+  --color-tone-violet-soft: color-mix(in oklab, var(--color-tone-violet) 32%, var(--color-canvas));
+  --color-tone-indigo-soft: color-mix(in oklab, var(--color-tone-indigo) 32%, var(--color-canvas));
+  --color-tone-blue-soft: color-mix(in oklab, var(--color-tone-blue) 32%, var(--color-canvas));
+  --color-tone-sky-soft: color-mix(in oklab, var(--color-tone-sky) 32%, var(--color-canvas));
+  --color-tone-turquoise-soft: color-mix(
+    in oklab,
+    var(--color-tone-turquoise) 32%,
+    var(--color-canvas)
+  );
+  --color-tone-mint-soft: color-mix(in oklab, var(--color-tone-mint) 32%, var(--color-canvas));
+  --color-tone-green-soft: color-mix(in oklab, var(--color-tone-green) 32%, var(--color-canvas));
+  --color-tone-lime-soft: color-mix(in oklab, var(--color-tone-lime) 32%, var(--color-canvas));
+  --color-tone-lemon-soft: color-mix(in oklab, var(--color-tone-lemon) 32%, var(--color-canvas));
+  --color-tone-amber-soft: color-mix(in oklab, var(--color-tone-amber) 32%, var(--color-canvas));
+
+  --color-on-tone-raspberry-soft: color-mix(in oklab, var(--color-tone-raspberry) 42%, #fff);
+  --color-on-tone-bubblegum-soft: color-mix(in oklab, var(--color-tone-bubblegum) 42%, #fff);
+  --color-on-tone-cotton-soft: color-mix(in oklab, var(--color-tone-cotton) 42%, #fff);
+  --color-on-tone-magenta-soft: color-mix(in oklab, var(--color-tone-magenta) 42%, #fff);
+  --color-on-tone-lilac-soft: color-mix(in oklab, var(--color-tone-lilac) 42%, #fff);
+  --color-on-tone-violet-soft: color-mix(in oklab, var(--color-tone-violet) 42%, #fff);
+  --color-on-tone-indigo-soft: color-mix(in oklab, var(--color-tone-indigo) 42%, #fff);
+  --color-on-tone-blue-soft: color-mix(in oklab, var(--color-tone-blue) 42%, #fff);
+  --color-on-tone-sky-soft: color-mix(in oklab, var(--color-tone-sky) 42%, #fff);
+  --color-on-tone-turquoise-soft: color-mix(in oklab, var(--color-tone-turquoise) 42%, #fff);
+  --color-on-tone-mint-soft: color-mix(in oklab, var(--color-tone-mint) 42%, #fff);
+  --color-on-tone-green-soft: color-mix(in oklab, var(--color-tone-green) 42%, #fff);
+  --color-on-tone-lime-soft: color-mix(in oklab, var(--color-tone-lime) 42%, #fff);
+  --color-on-tone-lemon-soft: color-mix(in oklab, var(--color-tone-lemon) 42%, #fff);
+  --color-on-tone-amber-soft: color-mix(in oklab, var(--color-tone-amber) 42%, #fff);
 
   /* Recado (balão de fala no card da dupla): branco gelo, letra preta */
   --color-note: #e6e3e8;
@@ -75,6 +130,15 @@
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 }
 
+/*
+ * As classes das cores de pessoa são montadas em lib/personTone.ts ("bg-tone-" + id), então
+ * o Tailwind não as encontra lendo o código: estas listas geram todas. Os ids são os mesmos
+ * de PERSON_COLORS (lá) e dos tokens tone-* (acima).
+ */
+@source inline("{bg,border,ring,text}-tone-{raspberry,bubblegum,cotton,magenta,lilac,violet,indigo,blue,sky,turquoise,mint,green,lime,lemon,amber}");
+@source inline("bg-tone-{raspberry,bubblegum,cotton,magenta,lilac,violet,indigo,blue,sky,turquoise,mint,green,lime,lemon,amber}-soft");
+@source inline("text-on-tone-{raspberry,bubblegum,cotton,magenta,lilac,violet,indigo,blue,sky,turquoise,mint,green,lime,lemon,amber}-soft");
+
 :root {
   color-scheme: dark;
 }
@@ -92,28 +156,61 @@
 }
 
 /*
- * Menus de ação: <dialog> modal aberto como folha no rodapé da tela (ActionSheet).
- * Modal deixa o resto da página inerte; o fundo escuro bloqueia os cliques.
+ * Folhas modais (Sheet, e o ActionSheet por cima dela): um <dialog> aberto com showModal,
+ * então a página atrás fica inerte e o fundo escuro bloqueia os cliques. No celular a folha
+ * sobe do rodapé ocupando a largura (perto do dedo); a partir de 640px fica no meio da tela.
+ * A rolagem fica dentro do painel, para o cabeçalho e o rodapé da folha não sumirem.
  */
-dialog.action-sheet {
+dialog.sheet {
   inset: auto 0 0 0;
-  margin: 0 auto;
+  margin: 0;
   width: 100%;
-  max-width: 28rem;
-  max-height: calc(100dvh - 1rem);
-  overflow-y: auto;
+  max-width: 100%;
+  max-height: 100dvh;
+  overflow: visible;
   border: 0;
   padding: 0;
   background: transparent;
   color: inherit;
 }
 
-dialog.action-sheet::backdrop {
-  background: rgb(0 0 0 / 0.55);
+@media (width >= 40rem) {
+  dialog.sheet {
+    inset: 0;
+    margin: auto;
+    max-width: 28rem;
+    height: fit-content;
+  }
 }
 
-/* Enquanto um menu está aberto, a página atrás não rola. */
-html:has(dialog.action-sheet[open]) {
+dialog.sheet::backdrop {
+  background: rgb(0 0 0 / 0.6);
+}
+
+/* Entra deslizando um pouco para cima, com o fundo escurecendo junto. Fechar é imediato. */
+dialog.sheet[open] {
+  animation: sheet-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+dialog.sheet[open]::backdrop {
+  animation: sheet-backdrop-in 220ms ease-out;
+}
+
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(1.5rem);
+  }
+}
+
+@keyframes sheet-backdrop-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Enquanto uma folha está aberta, a página atrás não rola. */
+html:has(dialog.sheet[open]) {
   overflow: hidden;
 }
 

@@ -19,4 +19,6 @@ export const groupService = {
   // The caller's note to their partner. Returns the caller's membership with the new note.
   saveNote: (texto: string) => api.put<GroupMember & NoteFields>('/groups/me/note', { texto }),
   clearNote: () => api.delete<void>('/groups/me/note'),
+  // Your color in the pair, a palette id. 409 when your partner already uses it.
+  setColor: (cor: string) => api.patch<GroupMember>('/groups/me/color', { cor }),
 };

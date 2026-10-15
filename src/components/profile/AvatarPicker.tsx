@@ -72,7 +72,8 @@ export function AvatarPicker({ me }: { me: Person }) {
   }
 
   return (
-    <div className="flex flex-col gap-4 rounded-lg bg-surface p-4">
+    // Sem fundo próprio: fica dentro da folha "Seu avatar" do perfil.
+    <div className="flex flex-col gap-4">
       {styleIds.length > 1 && (
         <div role="group" aria-label="Estilo" className="flex flex-wrap gap-1.5">
           {styleIds.map((id) => (
