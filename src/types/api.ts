@@ -174,12 +174,56 @@ export interface SeriesProgress {
   episodios: EpisodeProgressEntry[];
 }
 
+// Uma série do TMDB, como a busca e as estantes da tela de busca devolvem. `name` já é o
+// nome legível (o em inglês quando o original é em outro alfabeto).
 export interface SeriesSearchResult {
   tmdbId: number;
   name: string;
   posterPath: string | null;
   firstAirYear: number | null;
   englishName: string | null;
+}
+
+// De onde vêm as estantes do "Explorar": tudo, um país ou anime.
+export type DiscoverOrigin = 'all' | 'th' | 'kr' | 'jp' | 'anime';
+
+// "Para vocês dois": sugestões a partir das séries da dupla (`basedOn`, da que mais pesou).
+export interface CoupleSuggestions {
+  basedOn: string[];
+  items: SeriesSearchResult[];
+}
+
+// O que mais duplas do WatchMate adicionaram no último mês.
+export interface CommunitySeries extends SeriesSearchResult {
+  groupCount: number;
+}
+
+export interface StreamingProvider {
+  id: number;
+  name: string;
+  logoPath: string;
+}
+
+// A prévia de uma série antes de adicionar.
+export interface SeriesPreview {
+  tmdbId: number;
+  name: string;
+  originalName: string | null;
+  englishName: string | null;
+  overview: string | null;
+  posterPath: string | null;
+  backdropPath: string | null;
+  firstAirYear: number | null;
+  lastAirYear: number | null;
+  status: string | null;
+  genres: string[];
+  voteAverage: number | null;
+  seasonsCount: number;
+  episodesCount: number;
+  // Onde assistir no Brasil (dados do JustWatch); `link` é a página com todas as opções.
+  watch: { link: string | null; providers: StreamingProvider[] };
+  // Quantas duplas do WatchMate acompanham; null quando são poucas para mostrar.
+  couplesTracking: number | null;
 }
 
 export interface SeasonEpisode {

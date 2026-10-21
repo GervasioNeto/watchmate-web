@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { seriesQueries } from '@/api/queries';
+import { queryKeys } from '@/api/queryKeys';
 import { seriesService } from '@/api/services/seriesService';
 
 export function useSeries() {
@@ -14,6 +15,8 @@ export function useAddSeries() {
       queryClient.setQueryData(seriesQueries.list().queryKey, (old) =>
         old ? [series, ...old] : [series],
       );
+      // As sugestões "Para vocês dois" saem da lista: com uma série nova, mudam.
+      void queryClient.invalidateQueries({ queryKey: queryKeys.discover.forUs() });
     },
   });
 }

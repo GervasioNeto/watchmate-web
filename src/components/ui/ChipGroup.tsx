@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ScrollEdge } from '@/components/ui/ScrollEdge';
 import { useHasBeenSeen } from '@/hooks/useHasBeenSeen';
 import { useRadioGroup } from '@/hooks/useRadioGroup';
 import { useScrollEdges } from '@/hooks/useScrollEdges';
@@ -111,63 +111,20 @@ export function ChipGroup<T extends string>({
         <ScrollEdge
           side="start"
           visible={edges.start}
-          size={size}
+          arrow={size}
+          fade="md"
           onPress={() => edges.scrollByPage(-1)}
         />
         <ScrollEdge
           side="end"
           visible={edges.end}
-          size={size}
+          arrow={size}
+          fade="md"
           nudge={edges.end && hasBeenSeen && !hasNudged}
           onNudgeEnd={() => setHasNudged(true)}
           onPress={() => edges.scrollByPage(1)}
         />
       </div>
-    </div>
-  );
-}
-
-interface ScrollEdgeProps {
-  side: 'start' | 'end';
-  visible: boolean;
-  size: ChipSize;
-  nudge?: boolean;
-  onNudgeEnd?: () => void;
-  onPress: () => void;
-}
-
-// A pista de que a fileira continua: a borda esmaece no fundo da página, por cima das
-// pílulas que passam dela, e uma setinha leva ao que está escondido. É só para o toque e o
-// mouse (fora do Tab e do leitor de tela): no teclado, as setas já andam pelas opções.
-function ScrollEdge({ side, visible, size, nudge = false, onNudgeEnd, onPress }: ScrollEdgeProps) {
-  const isEnd = side === 'end';
-  const Icon = isEnd ? ChevronRight : ChevronLeft;
-
-  return (
-    <div
-      aria-hidden
-      className={cx(
-        'pointer-events-none absolute inset-y-0 flex w-16 items-center from-canvas from-45% to-transparent transition-opacity duration-200',
-        isEnd
-          ? 'right-0 justify-end bg-linear-to-l pr-2'
-          : 'left-0 justify-start bg-linear-to-r pl-2',
-        visible ? 'opacity-100' : 'opacity-0',
-      )}
-    >
-      <button
-        type="button"
-        tabIndex={-1}
-        onClick={onPress}
-        onAnimationEnd={onNudgeEnd}
-        className={cx(
-          'flex items-center justify-center rounded-full bg-surface-2 text-fg shadow-md ring-1 ring-line transition-[scale,background-color] hover:bg-line active:scale-90',
-          size === 'md' ? 'h-8 w-8' : 'h-7 w-7',
-          visible && 'pointer-events-auto',
-          nudge && 'animate-nudge',
-        )}
-      >
-        <Icon size={size === 'md' ? 18 : 16} strokeWidth={2.5} aria-hidden />
-      </button>
     </div>
   );
 }
