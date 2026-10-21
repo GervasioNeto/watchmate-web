@@ -1,37 +1,102 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Ellipsis } from 'lucide-react';
-import { EpisodeRow } from '@/components/episodes/EpisodeRow';
+import { EpisodeRow, type EpisodeSocial } from '@/components/episodes/EpisodeRow';
+import { EpisodeSheet, type EpisodeSheetEpisode } from '@/components/episodes/EpisodeSheet';
+import { SeasonLegend, SeasonMeter } from '@/components/episodes/SeasonMarks';
 import { SeasonRetrospective } from '@/components/episodes/SeasonRetrospective';
 import { ActionSheet } from '@/components/ui/ActionSheet';
 import { Button } from '@/components/ui/Button';
 import { ChipGroup } from '@/components/ui/ChipGroup';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useCouple } from '@/hooks/useCouple';
+import { useSeasonCommentCounts } from '@/hooks/useEpisodeComments';
 import { useSeasonEpisodes } from '@/hooks/useSeasonEpisodes';
+import { useSeasonReactions } from '@/hooks/useSeasonReactions';
 import {
   affectsEpisode,
   usePendingProgressActions,
   useUpdateProgress,
 } from '@/hooks/useSeriesProgress';
+import { formatUpcomingDay } from '@/lib/dates';
 import {
   getEpisodeChoices,
   getEpisodeQuickToggle,
   getSeasonChoices,
   getSeasonStatus,
+  type ProgressChange,
 } from '@/lib/episodeActions';
+import { countMarksBySeason, EMPTY_SEASON_MARKS, getEpisodeMarkKind } from '@/lib/episodeMark';
+import { parseEpisodeLink } from '@/lib/inbox';
 import {
   episodeKey,
+  formatEpisodeCode,
   getEpisodeWatchStatus,
   getMember,
+  getNextPosition,
   getPlayableSeasons,
   getSeasonTotal,
   indexEpisodes,
 } from '@/lib/progress';
-import type { SeriesProgress, TrackedSeries } from '@/types/api';
+import { tmdbStillUrl } from '@/lib/tmdb';
+import type { EpisodeReaction, SeasonEpisode, SeriesProgress, TrackedSeries } from '@/types/api';
 
 interface EpisodesSectionProps {
   series: TrackedSeries;
   progress: SeriesProgress;
+}
+
+const NO_SOCIAL: EpisodeSocial = { myReaction: null, partnerReaction: null, comments: 0 };
+
+// A linha tem pouco espaço ao lado da imagem: só a duração ("62 min"). A folha mostra a
+// data também ("24 de jul. de 2019 · 62 min"). O que ainda não saiu: "Estreia sexta".
+function formatEpisodeMeta(details: SeasonEpisode | undefined, now: Date) {
+  if (!details) return { short: null, full: null };
+  const airDate = details.dataExibicao ? new Date(details.dataExibicao) : null;
+  if (airDate && airDate > now) {
+    const premiere = `Estreia ${formatUpcomingDay(airDate, now)}`;
+    return { short: premiere, full: premiere };
+  }
+  const runtime = details.duracaoMinutos ? `${details.duracaoMinutos} min` : null;
+  const date = airDate?.toLocaleDateString('pt-BR', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+  return { short: runtime, full: [date, runtime].filter(Boolean).join(' · ') || null };
+}
+
+type EpisodeView = EpisodeSheetEpisode & { shortMeta: string | null; stillUrl: string | null };
+
+// O que a linha mostra das reações sem abrir o episódio. A do par chega escondida da API
+// enquanto é spoiler para você: aí só aparece que ela existe.
+function indexSocial(
+  reactions: EpisodeReaction[] | undefined,
+  commentCounts: Map<number, number>,
+  meId: string,
+  partnerId: string | null,
+): Map<number, EpisodeSocial> {
+  const social = new Map<number, EpisodeSocial>();
+  const entry = (episode: number) => {
+    const current = social.get(episode) ?? {
+      ...NO_SOCIAL,
+      comments: commentCounts.get(episode) ?? 0,
+    };
+    social.set(episode, current);
+    return current;
+  };
+
+  for (const [episode] of commentCounts) entry(episode);
+  for (const reaction of reactions ?? []) {
+    if (reaction.usuarioId === meId) {
+      entry(reaction.episodio).myReaction = reaction.oculto ? null : reaction.emoji;
+    } else if (reaction.usuarioId === partnerId) {
+      entry(reaction.episodio).partnerReaction = {
+        emoji: reaction.oculto ? null : reaction.emoji,
+      };
+    }
+  }
+  return social;
 }
 
 export function EpisodesSection({ series, progress }: EpisodesSectionProps) {
@@ -39,18 +104,71 @@ export function EpisodesSection({ series, progress }: EpisodesSectionProps) {
   const updateProgress = useUpdateProgress(series.id);
   const pending = usePendingProgressActions(series.id);
   const episodeIndex = useMemo(() => indexEpisodes(progress), [progress]);
+  const marksBySeason = useMemo(
+    () => (me ? countMarksBySeason(progress, me.id, partner?.id ?? null) : null),
+    [progress, me, partner],
+  );
 
   const seasons = getPlayableSeasons(series.temporadas);
-  const myPosition = me ? getMember(progress, me.id)?.posicaoAtual : null;
+  const myPosition = me ? (getMember(progress, me.id)?.posicaoAtual ?? null) : null;
   const [seasonOverride, setSeasonOverride] = useState<number | null>(null);
   const season = seasonOverride ?? myPosition?.temporada ?? seasons[0]?.numero ?? 1;
 
+  // O episódio aberto na folha e quem a abriu (para o foco voltar para a linha).
+  const [openNumber, setOpenNumber] = useState<number | null>(null);
+  const [sheetTrigger, setSheetTrigger] = useState<HTMLElement | null>(null);
+  // Imagens de episódios não vistos que você pediu para mostrar: valem na lista e na folha.
+  const [revealedStills, setRevealedStills] = useState<ReadonlySet<string>>(() => new Set());
+
+  // Veio de um aviso de comentário ou reação (?episode=2-5, ver lib/inbox.ts): abre aquela
+  // temporada com a folha do episódio aberta. O pedido sai do endereço logo em seguida, para
+  // voltar ou recarregar não abrir de novo.
+  const [params, setParams] = useSearchParams();
+  const episodeLink = params.get('episode');
+  const [handledLink, setHandledLink] = useState<string | null>(null);
+  if (episodeLink !== handledLink) {
+    setHandledLink(episodeLink);
+    const linked = parseEpisodeLink(episodeLink);
+    if (linked && seasons.some((entry) => entry.numero === linked.season)) {
+      setSeasonOverride(linked.season);
+      setOpenNumber(linked.episode);
+    }
+  }
+  useEffect(() => {
+    if (episodeLink === null) return;
+    setParams(
+      (current) => {
+        current.delete('episode');
+        return current;
+      },
+      { replace: true, preventScrollReset: true },
+    );
+  }, [episodeLink, setParams]);
+
   const { data: episodes, isLoading: isEpisodesLoading } = useSeasonEpisodes(series.id, season);
+  const { data: reactions } = useSeasonReactions(series.id, season);
+  const { data: commentCounts } = useSeasonCommentCounts(series.id, season);
 
-  if (!me) return null;
+  const social = useMemo(
+    () =>
+      me
+        ? indexSocial(
+            reactions,
+            new Map(commentCounts?.map((row) => [row.episodio, row.total])),
+            me.id,
+            partner?.id ?? null,
+          )
+        : new Map<number, EpisodeSocial>(),
+    [reactions, commentCounts, me, partner],
+  );
 
+  if (!me || !marksBySeason) return null;
+
+  const meId = me.id;
+  const partnerId = partner?.id ?? null;
   const total = getSeasonTotal(series.temporadas, season) ?? 0;
-  const context = { meId: me.id, partnerName: partner?.shortName ?? null };
+  const context = { meId, partnerName: partner?.shortName ?? null };
+  const now = new Date();
 
   // A lista do TMDB pode ter episódios novos; sem ela, usamos o total salvo na série.
   const numbers =
@@ -59,7 +177,11 @@ export function EpisodesSection({ series, progress }: EpisodesSectionProps) {
       : Array.from({ length: total }, (_, index) => index + 1);
   const detailsByNumber = new Map(episodes?.map((episode) => [episode.numero, episode]));
 
-  const seasonStatus = getSeasonStatus(progress, season, total, me.id, partner?.id ?? null);
+  // O próximo que você tem para ver, se ele cai nessa temporada.
+  const next = getNextPosition(myPosition, series.temporadas);
+  const nextNumber = next?.temporada === season ? next.episodio : null;
+
+  const seasonStatus = getSeasonStatus(progress, season, total, meId, partnerId);
   const seasonChoices = getSeasonChoices(seasonStatus, context);
   const isSeasonPending = pending.some(
     (action) =>
@@ -67,6 +189,38 @@ export function EpisodesSection({ series, progress }: EpisodesSectionProps) {
   );
   const bothFinishedSeason =
     !!partner && total > 0 && seasonStatus.mine >= total && seasonStatus.partners >= total;
+
+  function describeEpisode(number: number): EpisodeView {
+    const key = episodeKey(season, number);
+    const details = detailsByNumber.get(number);
+    const status = getEpisodeWatchStatus(episodeIndex.get(key), meId, partnerId);
+    const meta = formatEpisodeMeta(details, now);
+    return {
+      number,
+      code: formatEpisodeCode({ temporada: season, episodio: number }),
+      title: details?.titulo ?? `Episódio ${number}`,
+      meta: meta.full,
+      shortMeta: meta.short,
+      details,
+      stillUrl: tmdbStillUrl(details?.imagem ?? null),
+      status,
+      mark: getEpisodeMarkKind(status),
+      isStillHidden: !status.me && !revealedStills.has(key),
+      choices: getEpisodeChoices(status, context),
+      canMark: number >= 1 && number <= total,
+      isPending: pending.some((action) => affectsEpisode(action, season, number)),
+    };
+  }
+
+  function changeEpisode(number: number, change: ProgressChange) {
+    updateProgress.mutate({ kind: 'episode', season, episode: number, ...change });
+  }
+
+  function revealStill(number: number) {
+    setRevealedStills((current) => new Set(current).add(episodeKey(season, number)));
+  }
+
+  const openEpisode = openNumber !== null ? describeEpisode(openNumber) : null;
 
   return (
     <section aria-labelledby="episodes-heading" className="flex flex-col gap-3">
@@ -111,13 +265,28 @@ export function EpisodesSection({ series, progress }: EpisodesSectionProps) {
           options={seasons.map((entry) => ({
             value: String(entry.numero),
             label: entry.numero === 0 ? 'Especiais' : `T${entry.numero}`,
+            indicator: (selected) => (
+              <SeasonMeter
+                counts={marksBySeason.get(entry.numero) ?? EMPTY_SEASON_MARKS}
+                total={getSeasonTotal(series.temporadas, entry.numero) ?? 0}
+                me={me}
+                partner={partner}
+                selected={selected}
+              />
+            ),
           }))}
           value={String(season)}
           onChange={(value) => setSeasonOverride(Number(value))}
           bleed
-          className="pb-1"
         />
       )}
+
+      <SeasonLegend
+        counts={marksBySeason.get(season) ?? EMPTY_SEASON_MARKS}
+        total={total}
+        me={me}
+        partner={partner}
+      />
 
       {updateProgress.isError && (
         <p role="alert" className="text-sm text-danger">
@@ -130,12 +299,17 @@ export function EpisodesSection({ series, progress }: EpisodesSectionProps) {
       {isEpisodesLoading ? (
         <ul aria-label="Carregando episódios" className="flex flex-col">
           {[0, 1, 2].map((index) => (
-            <li key={index} className="flex gap-3 border-b border-line py-3 last:border-b-0">
-              <Skeleton className="aspect-video w-24 shrink-0 rounded-sm sm:w-32" />
-              <div className="flex flex-1 flex-col gap-2 pt-1">
-                <Skeleton className="h-3 w-12 rounded-sm" />
+            <li
+              key={index}
+              className="flex items-start gap-3 border-b border-line py-3 last:border-b-0"
+            >
+              <Skeleton className="aspect-video w-32 shrink-0 rounded-md sm:w-40" />
+              <div className="flex flex-1 flex-col gap-2">
+                <Skeleton className="h-3 w-1/3 rounded-sm" />
                 <Skeleton className="h-4 w-3/4 rounded-sm" />
+                <Skeleton className="h-7 w-20 rounded-full" />
               </div>
+              <Skeleton className="mx-2 h-7 w-7 shrink-0 rounded-full" />
             </li>
           ))}
         </ul>
@@ -144,33 +318,48 @@ export function EpisodesSection({ series, progress }: EpisodesSectionProps) {
       ) : (
         <ul className="flex flex-col">
           {numbers.map((number) => {
-            const status = getEpisodeWatchStatus(
-              episodeIndex.get(episodeKey(season, number)),
-              me.id,
-              partner?.id ?? null,
-            );
+            const episode = describeEpisode(number);
+            const toggle = getEpisodeQuickToggle(episode.status);
             return (
               <EpisodeRow
                 key={number}
-                seriesId={series.id}
-                season={season}
+                code={episode.code}
                 number={number}
-                details={detailsByNumber.get(number)}
-                status={status}
-                toggle={getEpisodeQuickToggle(status)}
-                choices={getEpisodeChoices(status, context)}
+                title={episode.title}
+                meta={episode.shortMeta}
+                stillUrl={episode.stillUrl}
+                isStillHidden={episode.isStillHidden}
+                onRevealStill={() => revealStill(number)}
+                mark={episode.mark}
                 me={me}
                 partner={partner}
-                canMark={number >= 1 && number <= total}
-                isPending={pending.some((action) => affectsEpisode(action, season, number))}
-                onChange={(change) =>
-                  updateProgress.mutate({ kind: 'episode', season, episode: number, ...change })
-                }
+                isNext={number === nextNumber && !episode.status.me}
+                social={social.get(number) ?? NO_SOCIAL}
+                checked={toggle.checked}
+                canMark={episode.canMark}
+                isPending={episode.isPending}
+                onToggle={() => changeEpisode(number, { watched: toggle.watched, scope: 'me' })}
+                onOpen={(trigger) => {
+                  setSheetTrigger(trigger);
+                  setOpenNumber(number);
+                }}
               />
             );
           })}
         </ul>
       )}
+
+      <EpisodeSheet
+        seriesId={series.id}
+        season={season}
+        episode={openEpisode}
+        me={me}
+        partner={partner}
+        onChange={changeEpisode}
+        onRevealStill={revealStill}
+        onClose={() => setOpenNumber(null)}
+        returnFocusTo={sheetTrigger}
+      />
     </section>
   );
 }

@@ -3,6 +3,8 @@ import { queryKeys } from '@/api/queryKeys';
 import { discoverService } from '@/api/services/discoverService';
 import { episodeService } from '@/api/services/episodeService';
 import { groupService } from '@/api/services/groupService';
+import { inboxService } from '@/api/services/inboxService';
+import { inviteService } from '@/api/services/inviteService';
 import { meService } from '@/api/services/meService';
 import { progressService } from '@/api/services/progressService';
 import { pushService } from '@/api/services/pushService';
@@ -78,6 +80,16 @@ export const pushQueries = {
     }),
 };
 
+export const inviteQueries = {
+  active: () =>
+    queryOptions({ queryKey: queryKeys.invites.active(), queryFn: inviteService.active }),
+};
+
+export const inboxQueries = {
+  list: () => queryOptions({ queryKey: queryKeys.inbox.list(), queryFn: inboxService.list }),
+  unseen: () => queryOptions({ queryKey: queryKeys.inbox.unseen(), queryFn: inboxService.unseen }),
+};
+
 export const groupQueries = {
   mine: () => queryOptions({ queryKey: queryKeys.group(), queryFn: groupService.getMine }),
 };
@@ -106,6 +118,11 @@ export const seasonQueries = {
     queryOptions({
       queryKey: queryKeys.season.reactions(seriesId, season),
       queryFn: () => episodeService.listSeasonReactions(seriesId, season),
+    }),
+  commentCounts: (seriesId: string, season: number) =>
+    queryOptions({
+      queryKey: queryKeys.season.commentCounts(seriesId, season),
+      queryFn: () => episodeService.listSeasonCommentCounts(seriesId, season),
     }),
 };
 

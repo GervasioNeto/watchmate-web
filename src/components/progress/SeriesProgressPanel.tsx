@@ -1,3 +1,4 @@
+import { InviteStrip } from '@/components/invite/InviteStrip';
 import { CoupleProgress, type CoupleProgressRow } from '@/components/progress/CoupleProgress';
 import { Button } from '@/components/ui/Button';
 import { useCouple } from '@/hooks/useCouple';
@@ -69,19 +70,23 @@ export function SeriesProgressPanel({ series, progress }: SeriesProgressPanelPro
       }
     >
       {next ? (
-        <div className="flex flex-wrap gap-2">
-          <Button
-            onClick={() => markNext(partner ? 'both' : 'me')}
-            isLoading={isNextPending}
-            className="min-w-0 flex-1 sm:flex-none"
-          >
-            {`${partner ? 'Assistimos juntos o' : 'Assisti o'} ${formatEpisodeCode(next)}`}
-          </Button>
-          {partner && (
-            <Button variant="secondary" onClick={() => markNext('me')} disabled={isNextPending}>
-              Só eu
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-wrap gap-2">
+            <Button
+              onClick={() => markNext(partner ? 'both' : 'me')}
+              isLoading={isNextPending}
+              className="min-w-0 flex-1 sm:flex-none"
+            >
+              {`${partner ? 'Assistimos juntos o' : 'Assisti o'} ${formatEpisodeCode(next)}`}
             </Button>
-          )}
+            {partner && (
+              <Button variant="secondary" onClick={() => markNext('me')} disabled={isNextPending}>
+                Só eu
+              </Button>
+            )}
+          </div>
+          {/* Ainda não é hora de marcar? Chama o par para verem juntos. */}
+          {partner && <InviteStrip series={series} next={next} />}
         </div>
       ) : (
         <p className="text-sm text-fg-muted">

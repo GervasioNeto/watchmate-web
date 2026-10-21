@@ -21,6 +21,17 @@ export const queryKeys = {
   },
   // Imagem gerada localmente pelo DiceBear (não vem da API).
   avatar: (style: string, seed: string) => ['avatar', style, seed] as const,
+  // O convite do momento da dupla (ver useActiveInvite).
+  invites: {
+    all: () => ['invites'] as const,
+    active: () => [...queryKeys.invites.all(), 'active'] as const,
+  },
+  // "Entre vocês": a lista e a contagem do pontinho no ícone.
+  inbox: {
+    all: () => ['inbox'] as const,
+    list: () => [...queryKeys.inbox.all(), 'list'] as const,
+    unseen: () => [...queryKeys.inbox.all(), 'unseen'] as const,
+  },
 
   series: {
     all: () => ['series'] as const,
@@ -37,6 +48,8 @@ export const queryKeys = {
       [...queryKeys.season.all(seriesId, season), 'episodes'] as const,
     reactions: (seriesId: string, season: number) =>
       [...queryKeys.season.all(seriesId, season), 'reactions'] as const,
+    commentCounts: (seriesId: string, season: number) =>
+      [...queryKeys.season.all(seriesId, season), 'comment-counts'] as const,
   },
 
   episode: {

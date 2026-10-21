@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ChevronRight, Pencil } from 'lucide-react';
 import { Avatar } from '@/components/ui/Avatar';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { TicketPerforation } from '@/components/ui/TicketPerforation';
 import { pluralEpisodes } from '@/lib/coupleSummary';
 import { cx } from '@/lib/cx';
 import { formatMonth } from '@/lib/dates';
@@ -95,24 +96,12 @@ export function ProfileTicket({
         </div>
       </div>
 
-      <Perforation />
+      <TicketPerforation />
 
       <div className="px-5 pt-6 pb-5">
         <TicketStub me={me} partner={partner} highlights={highlights} />
       </div>
     </section>
-  );
-}
-
-// O picote do ingresso: a linha tracejada e um "dente" em cada borda. Os dentes são
-// círculos na cor do fundo da página que passam metade para fora do cartão.
-function Perforation() {
-  return (
-    <div aria-hidden className="relative h-0">
-      <span className="absolute inset-x-6 -top-px border-t-2 border-dashed border-line" />
-      <span className="absolute top-0 -left-3 h-6 w-6 -translate-y-1/2 rounded-full bg-canvas" />
-      <span className="absolute top-0 -right-3 h-6 w-6 -translate-y-1/2 rounded-full bg-canvas" />
-    </div>
   );
 }
 

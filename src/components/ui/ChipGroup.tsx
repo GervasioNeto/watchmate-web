@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ScrollEdge } from '@/components/ui/ScrollEdge';
 import { useHasBeenSeen } from '@/hooks/useHasBeenSeen';
 import { useRadioGroup } from '@/hooks/useRadioGroup';
@@ -10,6 +10,9 @@ export interface ChipOption<T extends string> {
   label: string;
   // Quantos itens a opção mostraria; omitido enquanto não dá para saber.
   count?: number;
+  // Um sinal visual depois do rótulo (ex.: o progresso da temporada). Recebe se a pílula
+  // está marcada, para acompanhar o contraste dela.
+  indicator?: (selected: boolean) => ReactNode;
 }
 
 type ChipSize = 'sm' | 'md';
@@ -103,6 +106,7 @@ export function ChipGroup<T extends string>({
                     {option.count}
                   </span>
                 )}
+                {option.indicator?.(selected)}
               </button>
             );
           })}
