@@ -11,6 +11,7 @@ import { useCouple } from '@/hooks/useCouple';
 import { useGroup } from '@/hooks/useGroup';
 import { useListEntries } from '@/hooks/useListEntries';
 import { pickTonight } from '@/lib/listOrder';
+import type { AddSeriesLocationState } from '@/routes/AddSeriesPage';
 
 export function MyListPage() {
   const navigate = useNavigate();
@@ -26,7 +27,9 @@ export function MyListPage() {
   // como a lista, para o atalho não trocar de série enquanto carrega.
   const tonight = me && !isProgressLoading ? pickTonight(entries, me, partner, new Date()) : null;
 
-  const goToAdd = () => navigate('/series/add');
+  // Veio do "Adicionar": a busca abre com o campo focado (ver AddSeriesPage).
+  const goToAdd = () =>
+    navigate('/series/add', { state: { focusSearch: true } satisfies AddSeriesLocationState });
 
   return (
     <>

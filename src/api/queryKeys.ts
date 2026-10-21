@@ -5,6 +5,15 @@ export const queryKeys = {
   // Fica embaixo de "me": buscar o /me de novo também atualiza o estado do Telegram.
   telegram: () => [...queryKeys.me(), 'telegram'] as const,
   group: () => ['group'] as const,
+  discover: {
+    all: () => ['discover'] as const,
+    trending: (origin: string) => [...queryKeys.discover.all(), 'trending', origin] as const,
+    onTheAir: (origin: string) => [...queryKeys.discover.all(), 'on-the-air', origin] as const,
+    // Depende da lista da dupla: muda quando vocês adicionam uma série.
+    forUs: () => [...queryKeys.discover.all(), 'for-us'] as const,
+    community: () => [...queryKeys.discover.all(), 'community'] as const,
+    preview: (tmdbId: number) => [...queryKeys.discover.all(), 'preview', tmdbId] as const,
+  },
   push: {
     publicKey: () => ['push', 'public-key'] as const,
     // Se este aparelho recebe push (vem do navegador, não da API).
