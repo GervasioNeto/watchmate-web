@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Ellipsis } from 'lucide-react';
 import { EpisodeRow, type EpisodeSocial } from '@/components/episodes/EpisodeRow';
 import { EpisodeSheet, type EpisodeSheetEpisode } from '@/components/episodes/EpisodeSheet';
@@ -26,6 +27,7 @@ import {
   type ProgressChange,
 } from '@/lib/episodeActions';
 import { countMarksBySeason, EMPTY_SEASON_MARKS, getEpisodeMarkKind } from '@/lib/episodeMark';
+import { parseEpisodeLink } from '@/lib/inbox';
 import {
   episodeKey,
   formatEpisodeCode,
@@ -117,6 +119,31 @@ export function EpisodesSection({ series, progress }: EpisodesSectionProps) {
   const [sheetTrigger, setSheetTrigger] = useState<HTMLElement | null>(null);
   // Imagens de episódios não vistos que você pediu para mostrar: valem na lista e na folha.
   const [revealedStills, setRevealedStills] = useState<ReadonlySet<string>>(() => new Set());
+
+  // Veio de um aviso de comentário ou reação (?episode=2-5, ver lib/inbox.ts): abre aquela
+  // temporada com a folha do episódio aberta. O pedido sai do endereço logo em seguida, para
+  // voltar ou recarregar não abrir de novo.
+  const [params, setParams] = useSearchParams();
+  const episodeLink = params.get('episode');
+  const [handledLink, setHandledLink] = useState<string | null>(null);
+  if (episodeLink !== handledLink) {
+    setHandledLink(episodeLink);
+    const linked = parseEpisodeLink(episodeLink);
+    if (linked && seasons.some((entry) => entry.numero === linked.season)) {
+      setSeasonOverride(linked.season);
+      setOpenNumber(linked.episode);
+    }
+  }
+  useEffect(() => {
+    if (episodeLink === null) return;
+    setParams(
+      (current) => {
+        current.delete('episode');
+        return current;
+      },
+      { replace: true, preventScrollReset: true },
+    );
+  }, [episodeLink, setParams]);
 
   const { data: episodes, isLoading: isEpisodesLoading } = useSeasonEpisodes(series.id, season);
   const { data: reactions } = useSeasonReactions(series.id, season);

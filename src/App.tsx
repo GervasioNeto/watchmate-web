@@ -5,6 +5,7 @@ import { AddSeriesPage } from '@/routes/AddSeriesPage';
 import { AppLayout } from '@/routes/AppLayout';
 import { CouplePage } from '@/routes/CouplePage';
 import { HomePage } from '@/routes/HomePage';
+import { InboxPage } from '@/routes/InboxPage';
 import { LoginPage } from '@/routes/LoginPage';
 import { MyListPage } from '@/routes/MyListPage';
 import { OnboardingPage } from '@/routes/OnboardingPage';
@@ -38,6 +39,7 @@ const router = createBrowserRouter([
           { path: '/series/add', element: <AddSeriesPage /> },
           { path: '/series/:seriesId', element: <SeriesDetailPage /> },
           { path: '/couple', element: <CouplePage /> },
+          { path: '/inbox', element: <InboxPage /> },
           { path: '/profile', element: <ProfilePage /> },
         ],
       },

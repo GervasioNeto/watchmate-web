@@ -264,3 +264,73 @@ export interface EpisodeCommentCount {
   episodio: number;
   total: number;
 }
+
+// ---------- "Bora?" e "Entre vocês" ----------
+// Estes vêm de rotas novas da API, que já respondem em inglês (como a busca e as estantes).
+
+// `expired`: passou da hora sem a sessão acontecer (a API calcula; o banco não guarda).
+export type InviteStatus = 'pending' | 'accepted' | 'declined' | 'canceled' | 'expired';
+
+export interface Invite {
+  id: string;
+  series: { id: string; nome: string; posterPath: string | null; backdropPath: string | null };
+  season: number;
+  episode: number;
+  fromId: string;
+  toId: string;
+  // A hora da sessão; null é "agora".
+  at: string | null;
+  phrase: string | null;
+  status: InviteStatus;
+  // Aceito em outro horário ("topo, mas às 22h"): `at` já é o novo.
+  rescheduled: boolean;
+  // Os dois viram o episódio depois do convite: a sessão aconteceu.
+  fulfilled: boolean;
+  createdAt: string;
+  answeredAt: string | null;
+  expiresAt: string;
+}
+
+export interface CreateInviteInput {
+  seriesId: string;
+  season: number;
+  episode: number;
+  at: string | null;
+  // O fuso do celular, para o push dizer "hoje às 21h" na hora de vocês.
+  timeZone: string;
+  phrase: string | null;
+}
+
+// Aceitar sem `at` é no horário combinado; com `at`, em outro (null é "agora").
+export type InviteAnswer = { answer: 'accept'; at?: string | null } | { answer: 'decline' };
+
+export type InboxItemType =
+  | 'invite'
+  | 'invite-answer'
+  | 'note'
+  | 'comment'
+  | 'reaction'
+  | 'series-added'
+  | 'episode-watched'
+  | 'season-finished';
+
+export interface InboxItem {
+  id: string;
+  type: InboxItemType;
+  actorId: string;
+  // A última vez que o assunto teve novidade.
+  at: string;
+  // Quantos se juntaram num aviso só ("comentou 3 vezes", "viu 4 episódios").
+  count: number;
+  // Chegou depois da última vez que você abriu "Entre vocês".
+  isNew: boolean;
+  series: { id: string; nome: string; posterPath: string | null } | null;
+  season: number | null;
+  episode: number | null;
+  // O recado, ou o comentário mais recente. Null quando é spoiler (`hidden`).
+  text: string | null;
+  emoji: string | null;
+  // Comentário ou reação num episódio que você ainda não viu: existe, mas não aparece.
+  hidden: boolean;
+  invite: Invite | null;
+}

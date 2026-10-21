@@ -2,6 +2,7 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { AppHeader } from '@/components/AppHeader';
 import { CoupleCard } from '@/components/couple/CoupleCard';
 import { InviteCode } from '@/components/InviteCode';
+import { InviteTicket } from '@/components/invite/InviteTicket';
 import { ContinueWatchingCard } from '@/components/series/ContinueWatchingCard';
 import { SERIES_GRID } from '@/components/series/seriesGrid';
 import { SeriesLibrary } from '@/components/series/SeriesLibrary';
@@ -9,6 +10,7 @@ import { Button } from '@/components/ui/Button';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useCouple } from '@/hooks/useCouple';
 import { useGroup } from '@/hooks/useGroup';
+import { useActiveInvite } from '@/hooks/useInvites';
 import { useListEntries } from '@/hooks/useListEntries';
 import { pickTonight } from '@/lib/listOrder';
 import type { AddSeriesLocationState } from '@/routes/AddSeriesPage';
@@ -18,6 +20,9 @@ export function MyListPage() {
   const { me, partner } = useCouple();
   const { data: group, isLoading: isGroupLoading } = useGroup();
   const { entries, isSeriesLoading, isProgressLoading } = useListEntries();
+  // Com um convite valendo (de qualquer um dos dois), o ingresso toma o lugar do atalho:
+  // é o que espera resposta, ou a sessão já combinada.
+  const { data: invite } = useActiveInvite(!!partner);
 
   if (!isGroupLoading && group === null) {
     return <Navigate to="/onboarding" replace />;
@@ -64,7 +69,11 @@ export function MyListPage() {
           </div>
         ) : entries.length > 0 ? (
           <>
-            {tonight && <ContinueWatchingCard pick={tonight} />}
+            {invite ? (
+              <InviteTicket invite={invite} />
+            ) : (
+              tonight && <ContinueWatchingCard pick={tonight} />
+            )}
             <SeriesLibrary entries={entries} isProgressLoading={isProgressLoading} />
           </>
         ) : (

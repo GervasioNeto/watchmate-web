@@ -3,6 +3,8 @@ import { queryKeys } from '@/api/queryKeys';
 import { discoverService } from '@/api/services/discoverService';
 import { episodeService } from '@/api/services/episodeService';
 import { groupService } from '@/api/services/groupService';
+import { inboxService } from '@/api/services/inboxService';
+import { inviteService } from '@/api/services/inviteService';
 import { meService } from '@/api/services/meService';
 import { progressService } from '@/api/services/progressService';
 import { pushService } from '@/api/services/pushService';
@@ -76,6 +78,16 @@ export const pushQueries = {
       queryFn: pushService.getPublicKey,
       staleTime: Infinity,
     }),
+};
+
+export const inviteQueries = {
+  active: () =>
+    queryOptions({ queryKey: queryKeys.invites.active(), queryFn: inviteService.active }),
+};
+
+export const inboxQueries = {
+  list: () => queryOptions({ queryKey: queryKeys.inbox.list(), queryFn: inboxService.list }),
+  unseen: () => queryOptions({ queryKey: queryKeys.inbox.unseen(), queryFn: inboxService.unseen }),
 };
 
 export const groupQueries = {
