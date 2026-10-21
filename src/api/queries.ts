@@ -1,13 +1,17 @@
 import { queryOptions } from '@tanstack/react-query';
 import { queryKeys } from '@/api/queryKeys';
+import { discoverService } from '@/api/services/discoverService';
 import { episodeService } from '@/api/services/episodeService';
 import { groupService } from '@/api/services/groupService';
+import { inboxService } from '@/api/services/inboxService';
+import { inviteService } from '@/api/services/inviteService';
 import { meService } from '@/api/services/meService';
 import { progressService } from '@/api/services/progressService';
 import { pushService } from '@/api/services/pushService';
 import { seriesService } from '@/api/services/seriesService';
 import { telegramService } from '@/api/services/telegramService';
 import type { AvatarStyleId } from '@/lib/avatarStyles';
+import type { DiscoverOrigin } from '@/types/api';
 
 // Each factory pairs a cache key with its fetcher. The returned queryKey is
 // typed with its data, so setQueryData/getQueryData infer the right shape.
@@ -29,6 +33,43 @@ export const avatarQueries = {
     }),
 };
 
+// As estantes mudam devagar (a API ainda guarda em cache por horas): meia hora sem buscar
+// de novo, e trocar de origem e voltar não pisca.
+const DISCOVER_STALE_MS = 30 * 60 * 1000;
+
+export const discoverQueries = {
+  trending: (origin: DiscoverOrigin) =>
+    queryOptions({
+      queryKey: queryKeys.discover.trending(origin),
+      queryFn: () => discoverService.trending(origin),
+      staleTime: DISCOVER_STALE_MS,
+    }),
+  onTheAir: (origin: DiscoverOrigin) =>
+    queryOptions({
+      queryKey: queryKeys.discover.onTheAir(origin),
+      queryFn: () => discoverService.onTheAir(origin),
+      staleTime: DISCOVER_STALE_MS,
+    }),
+  forUs: () =>
+    queryOptions({
+      queryKey: queryKeys.discover.forUs(),
+      queryFn: discoverService.forUs,
+      staleTime: DISCOVER_STALE_MS,
+    }),
+  community: () =>
+    queryOptions({
+      queryKey: queryKeys.discover.community(),
+      queryFn: discoverService.community,
+      staleTime: DISCOVER_STALE_MS,
+    }),
+  preview: (tmdbId: number) =>
+    queryOptions({
+      queryKey: queryKeys.discover.preview(tmdbId),
+      queryFn: () => discoverService.preview(tmdbId),
+      staleTime: DISCOVER_STALE_MS,
+    }),
+};
+
 export const pushQueries = {
   // A chave só muda num deploy da API: uma busca por abertura do app basta.
   publicKey: () =>
@@ -37,6 +78,16 @@ export const pushQueries = {
       queryFn: pushService.getPublicKey,
       staleTime: Infinity,
     }),
+};
+
+export const inviteQueries = {
+  active: () =>
+    queryOptions({ queryKey: queryKeys.invites.active(), queryFn: inviteService.active }),
+};
+
+export const inboxQueries = {
+  list: () => queryOptions({ queryKey: queryKeys.inbox.list(), queryFn: inboxService.list }),
+  unseen: () => queryOptions({ queryKey: queryKeys.inbox.unseen(), queryFn: inboxService.unseen }),
 };
 
 export const groupQueries = {
@@ -67,6 +118,11 @@ export const seasonQueries = {
     queryOptions({
       queryKey: queryKeys.season.reactions(seriesId, season),
       queryFn: () => episodeService.listSeasonReactions(seriesId, season),
+    }),
+  commentCounts: (seriesId: string, season: number) =>
+    queryOptions({
+      queryKey: queryKeys.season.commentCounts(seriesId, season),
+      queryFn: () => episodeService.listSeasonCommentCounts(seriesId, season),
     }),
 };
 

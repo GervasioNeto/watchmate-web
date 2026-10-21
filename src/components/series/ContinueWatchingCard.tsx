@@ -1,7 +1,8 @@
-import { useId, type ReactNode } from 'react';
+import { useId, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight, Play, Sofa } from 'lucide-react';
+import { ChevronRight, Play, Popcorn, Sofa } from 'lucide-react';
 import { CoupleAvatars } from '@/components/couple/CoupleAvatars';
+import { InviteComposerSheet } from '@/components/invite/InviteComposerSheet';
 import { Avatar } from '@/components/ui/Avatar';
 import { useCouple } from '@/hooks/useCouple';
 import type { TonightPick } from '@/lib/listOrder';
@@ -12,10 +13,13 @@ import { tmdbBackdropUrl, tmdbPosterUrl } from '@/lib/tmdb';
 // Atalho para a série de hoje (ver pickTonight). Quando vocês estão no mesmo ponto, é o
 // "Hoje no sofá": um convite para o próximo episódio juntos. Senão, "Continuar
 // assistindo": onde cada um está e o seu próximo. Não marca nada: marcar fica na página
-// da série, onde dá para ver o que cada um já viu antes de decidir.
+// da série, onde dá para ver o que cada um já viu antes de decidir. O "Chamar" manda o
+// convite de verdade (o "Bora?"), sem sair da lista.
 export function ContinueWatchingCard({ pick }: { pick: TonightPick }) {
   const { me, partner } = useCouple();
   const headingId = useId();
+  const [composerOpen, setComposerOpen] = useState(false);
+  const [composerTrigger, setComposerTrigger] = useState<HTMLElement | null>(null);
 
   if (!me) return null;
 
@@ -121,7 +125,24 @@ export function ContinueWatchingCard({ pick }: { pick: TonightPick }) {
               {series.nome}
             </Link>
             {details}
-            <p className="text-sm font-semibold tabular-nums">{callToAction}</p>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+              <p className="text-sm font-semibold tabular-nums">{callToAction}</p>
+              {partner && (
+                // Por cima do link que cobre o card (z-10): o toque aqui chama, não abre.
+                <button
+                  type="button"
+                  aria-haspopup="dialog"
+                  onClick={(event) => {
+                    setComposerTrigger(event.currentTarget);
+                    setComposerOpen(true);
+                  }}
+                  className="relative z-10 inline-flex min-h-8 items-center gap-1.5 rounded-full bg-together/15 px-3 text-xs font-bold text-together transition-colors hover:bg-together/25"
+                >
+                  <Popcorn size={14} strokeWidth={2.25} aria-hidden />
+                  Chamar {partner.shortName}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -133,6 +154,17 @@ export function ContinueWatchingCard({ pick }: { pick: TonightPick }) {
         aria-hidden
         className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-fg-muted transition group-hover:translate-x-0.5 group-hover:text-fg"
       />
+
+      {partner && (
+        <InviteComposerSheet
+          open={composerOpen}
+          onClose={() => setComposerOpen(false)}
+          returnFocusTo={composerTrigger}
+          series={series}
+          season={pick.status.position.temporada}
+          episode={pick.status.position.episodio}
+        />
+      )}
     </section>
   );
 }

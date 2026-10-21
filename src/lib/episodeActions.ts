@@ -31,13 +31,13 @@ export interface QuickToggle {
 }
 
 // O check da linha do episódio é sempre seu: "eu vi". Ele não pergunta nada; quem
-// viu junto ou em outro momento se resolve no ⋯ ou no botão "Assistimos juntos".
+// viu junto ou em outro momento se resolve na folha do episódio.
 export function getEpisodeQuickToggle(status: EpisodeWatchStatus): QuickToggle {
   const checked = !!status.me;
   return { checked, watched: !checked };
 }
 
-// Opções do ⋯ de um episódio. A pergunta "viram juntos?" só aparece quando é ambígua:
+// Marcações da folha de um episódio. A pergunta "viram juntos?" só aparece quando é ambígua:
 // quando um dos dois já tinha marcado e o outro está sendo incluído agora.
 export function getEpisodeChoices(
   status: EpisodeWatchStatus,

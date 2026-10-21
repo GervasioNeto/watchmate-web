@@ -5,6 +5,15 @@ export const queryKeys = {
   // Fica embaixo de "me": buscar o /me de novo também atualiza o estado do Telegram.
   telegram: () => [...queryKeys.me(), 'telegram'] as const,
   group: () => ['group'] as const,
+  discover: {
+    all: () => ['discover'] as const,
+    trending: (origin: string) => [...queryKeys.discover.all(), 'trending', origin] as const,
+    onTheAir: (origin: string) => [...queryKeys.discover.all(), 'on-the-air', origin] as const,
+    // Depende da lista da dupla: muda quando vocês adicionam uma série.
+    forUs: () => [...queryKeys.discover.all(), 'for-us'] as const,
+    community: () => [...queryKeys.discover.all(), 'community'] as const,
+    preview: (tmdbId: number) => [...queryKeys.discover.all(), 'preview', tmdbId] as const,
+  },
   push: {
     publicKey: () => ['push', 'public-key'] as const,
     // Se este aparelho recebe push (vem do navegador, não da API).
@@ -12,6 +21,17 @@ export const queryKeys = {
   },
   // Imagem gerada localmente pelo DiceBear (não vem da API).
   avatar: (style: string, seed: string) => ['avatar', style, seed] as const,
+  // O convite do momento da dupla (ver useActiveInvite).
+  invites: {
+    all: () => ['invites'] as const,
+    active: () => [...queryKeys.invites.all(), 'active'] as const,
+  },
+  // "Entre vocês": a lista e a contagem do pontinho no ícone.
+  inbox: {
+    all: () => ['inbox'] as const,
+    list: () => [...queryKeys.inbox.all(), 'list'] as const,
+    unseen: () => [...queryKeys.inbox.all(), 'unseen'] as const,
+  },
 
   series: {
     all: () => ['series'] as const,
@@ -28,6 +48,8 @@ export const queryKeys = {
       [...queryKeys.season.all(seriesId, season), 'episodes'] as const,
     reactions: (seriesId: string, season: number) =>
       [...queryKeys.season.all(seriesId, season), 'reactions'] as const,
+    commentCounts: (seriesId: string, season: number) =>
+      [...queryKeys.season.all(seriesId, season), 'comment-counts'] as const,
   },
 
   episode: {

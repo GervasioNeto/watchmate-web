@@ -1,5 +1,10 @@
 import { api } from '@/api/client';
-import type { EpisodeComment, EpisodeReaction, SeasonEpisode } from '@/types/api';
+import type {
+  EpisodeComment,
+  EpisodeCommentCount,
+  EpisodeReaction,
+  SeasonEpisode,
+} from '@/types/api';
 
 function seasonPath(seriesId: string, season: number) {
   return `/series/${seriesId}/seasons/${season}`;
@@ -16,6 +21,8 @@ export const episodeService = {
     api.get<SeasonEpisode[]>(`${seasonPath(seriesId, season)}/episodes`),
   listSeasonReactions: (seriesId: string, season: number) =>
     api.get<EpisodeReaction[]>(`${seasonPath(seriesId, season)}/reactions`),
+  listSeasonCommentCounts: (seriesId: string, season: number) =>
+    api.get<EpisodeCommentCount[]>(`${seasonPath(seriesId, season)}/comment-counts`),
 
   listReactions: (seriesId: string, season: number, episode: number) =>
     api.get<EpisodeReaction[]>(`${episodePath(seriesId, season, episode)}/reactions`),

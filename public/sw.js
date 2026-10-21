@@ -12,7 +12,7 @@
 //
 // Mudou este arquivo? Aumente o VERSION: é ele que faz os celulares trocarem de versão.
 
-const VERSION = 2;
+const VERSION = 3;
 const SHELL_CACHE = `watchmate-shell-v${VERSION}`;
 const ASSETS_CACHE = 'watchmate-assets';
 const FONTS_CACHE = 'watchmate-fonts';
@@ -149,32 +149,65 @@ function withTimeout(promise, ms) {
 }
 
 // ---------- Avisos por push ----------
-// A API manda { title, body, path, tag, image } (ver watchmate-api, src/push). O aviso
-// aparece mesmo com o app fechado e o celular bloqueado; tocar nele abre a tela certa.
-// Avisos com a mesma tag se substituem: dez episódios seguidos viram um aviso só.
+// A API manda { title, body, path, tag, image, renotify, actions, badge } (ver watchmate-api,
+// src/push). O aviso aparece mesmo com o app fechado e o celular bloqueado; tocar nele abre
+// a tela certa. Avisos com a mesma tag se substituem: dez episódios seguidos viram um só.
+// O aviso já está guardado em "Entre vocês" quando chega: o push é só a cópia que avisa.
 
 const APP_HOME = '/my-list';
 
 self.addEventListener('push', (event) => {
   const message = readPush(event);
   event.waitUntil(
-    self.registration.showNotification(message.title, {
-      body: message.body,
-      icon: '/icons/icon-192.png',
-      // O ícone pequeno da barra de status do Android: só a silhueta conta.
-      badge: '/icons/badge-96.png',
-      image: message.image,
-      tag: message.tag,
-      data: { path: message.path },
-      lang: 'pt-BR',
-    }),
+    Promise.all([
+      self.registration.showNotification(message.title, {
+        body: message.body,
+        icon: '/icons/icon-192.png',
+        // O ícone pequeno da barra de status do Android: só a silhueta conta.
+        badge: '/icons/badge-96.png',
+        image: message.image,
+        tag: message.tag,
+        // Um convite novo toca de novo mesmo trocando o anterior (renotify exige tag).
+        renotify: message.renotify && !!message.tag,
+        // Os botões ("Bora!", "Hoje não"): o Android mostra; o iPhone, não.
+        actions: message.actions.map(({ action, title }) => ({ action, title })),
+        data: {
+          path: message.path,
+          actionPaths: Object.fromEntries(
+            message.actions.map(({ action, path }) => [action, path]),
+          ),
+        },
+        lang: 'pt-BR',
+      }),
+      updateBadge(message.badge),
+      tellOpenApp(message.tag),
+    ]),
   );
 });
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  event.waitUntil(openApp(event.notification.data?.path ?? APP_HOME));
+  const data = event.notification.data ?? {};
+  // Um botão abre a tela que faz a ação (ex.: aceitar o convite); o resto do aviso, a tela dele.
+  const path = (event.action && data.actionPaths?.[event.action]) || data.path || APP_HOME;
+  event.waitUntil(openApp(path));
 });
+
+// O número no ícone do app instalado (iPhone e computador; o Android põe o pontinho sozinho).
+async function updateBadge(count) {
+  if (typeof count !== 'number' || !self.navigator.setAppBadge) return;
+  try {
+    await (count > 0 ? self.navigator.setAppBadge(count) : self.navigator.clearAppBadge());
+  } catch {
+    // Sem permissão para o número: o aviso em si já chegou.
+  }
+}
+
+// Com o app aberto, ele busca de novo o que o aviso mudou (ver usePushUpdates).
+async function tellOpenApp(tag) {
+  const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+  for (const client of windows) client.postMessage({ type: 'push', tag });
+}
 
 // Conteúdo estranho não quebra nada: vira um aviso genérico que abre a lista.
 function readPush(event) {
@@ -187,10 +220,28 @@ function readPush(event) {
   return {
     title: typeof data.title === 'string' && data.title ? data.title : 'WatchMate',
     body: typeof data.body === 'string' ? data.body : '',
-    path: typeof data.path === 'string' && data.path.startsWith('/') ? data.path : APP_HOME,
+    path: isAppPath(data.path) ? data.path : APP_HOME,
     tag: typeof data.tag === 'string' ? data.tag : undefined,
     image: typeof data.image === 'string' ? data.image : undefined,
+    renotify: data.renotify === true,
+    actions: Array.isArray(data.actions)
+      ? data.actions
+          .filter(
+            (item) =>
+              item &&
+              typeof item.action === 'string' &&
+              typeof item.title === 'string' &&
+              isAppPath(item.path),
+          )
+          .slice(0, 2)
+      : [],
+    badge: typeof data.badge === 'number' ? data.badge : null,
   };
+}
+
+// Só telas do próprio app ("/inbox?..."), nunca "//outro-site".
+function isAppPath(value) {
+  return typeof value === 'string' && value.startsWith('/') && !value.startsWith('//');
 }
 
 // Com o app aberto, traz ele para a frente e leva até a tela, sem recarregar (o app ouve a
