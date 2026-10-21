@@ -107,6 +107,11 @@ export const seasonQueries = {
       queryKey: queryKeys.season.reactions(seriesId, season),
       queryFn: () => episodeService.listSeasonReactions(seriesId, season),
     }),
+  commentCounts: (seriesId: string, season: number) =>
+    queryOptions({
+      queryKey: queryKeys.season.commentCounts(seriesId, season),
+      queryFn: () => episodeService.listSeasonCommentCounts(seriesId, season),
+    }),
 };
 
 export const episodeQueries = {

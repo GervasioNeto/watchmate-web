@@ -258,3 +258,9 @@ interface EpisodeContentBase {
 export type EpisodeReaction = EpisodeContentBase & { atualizadoEm: string } & Spoilerable<'emoji'>;
 
 export type EpisodeComment = EpisodeContentBase & Spoilerable<'texto'>;
+
+// Quantos comentários um episódio tem (só os que têm algum aparecem).
+export interface EpisodeCommentCount {
+  episodio: number;
+  total: number;
+}

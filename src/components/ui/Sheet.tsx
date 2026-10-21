@@ -32,6 +32,7 @@ export function Sheet({
   const titleId = useId();
   const descriptionId = useId();
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
   // Só fecha se o toque começou E terminou no fundo: arrastar de dentro da folha para fora
   // (ao rolar uma lista, por exemplo) não conta como clique fora.
   const pressedOnBackdrop = useRef(false);
@@ -40,7 +41,12 @@ export function Sheet({
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
-    if (open && !dialog.open) dialog.showModal();
+    if (open && !dialog.open) {
+      dialog.showModal();
+      // O <dialog> guarda a rolagem da última vez em que esteve aberto: cada abertura começa
+      // do topo. Só depois do showModal, quando a rolagem existe de novo.
+      if (bodyRef.current) bodyRef.current.scrollTop = 0;
+    }
     if (!open && dialog.open) {
       dialog.close();
       returnFocusTo?.focus();
@@ -90,6 +96,7 @@ export function Sheet({
         </div>
 
         <div
+          ref={bodyRef}
           className={cx(
             'min-h-0 flex-1 overflow-y-auto px-4',
             footer ? 'pb-4' : 'pb-[max(1rem,env(safe-area-inset-bottom))]',

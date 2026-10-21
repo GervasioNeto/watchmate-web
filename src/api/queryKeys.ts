@@ -37,6 +37,8 @@ export const queryKeys = {
       [...queryKeys.season.all(seriesId, season), 'episodes'] as const,
     reactions: (seriesId: string, season: number) =>
       [...queryKeys.season.all(seriesId, season), 'reactions'] as const,
+    commentCounts: (seriesId: string, season: number) =>
+      [...queryKeys.season.all(seriesId, season), 'comment-counts'] as const,
   },
 
   episode: {

@@ -1,184 +1,303 @@
-import { useId, useState } from 'react';
-import { Check, ChevronDown, Ellipsis, LoaderCircle } from 'lucide-react';
-import { EpisodeComments } from '@/components/episodes/EpisodeComments';
-import { EpisodeReactions } from '@/components/episodes/EpisodeReactions';
-import { WatchBadge } from '@/components/episodes/WatchBadge';
-import { ActionSheet } from '@/components/ui/ActionSheet';
-import { IconButton } from '@/components/ui/IconButton';
+import { Check, ChevronRight, EyeOff, LoaderCircle, MessageCircle } from 'lucide-react';
+import { Fragment } from 'react';
+import { WatchBar } from '@/components/episodes/EpisodeMark';
 import { cx } from '@/lib/cx';
-import type { ProgressChange, ProgressChoice, QuickToggle } from '@/lib/episodeActions';
+import { markLabel, type EpisodeMarkKind } from '@/lib/episodeMark';
 import type { Person } from '@/lib/people';
-import type { EpisodeWatchStatus } from '@/lib/progress';
-import { formatEpisodeCode } from '@/lib/progress';
-import { tmdbStillUrl } from '@/lib/tmdb';
-import { getWatchBadge } from '@/lib/watchBadge';
-import type { SeasonEpisode } from '@/types/api';
+
+// O que já aconteceu entre vocês no episódio, para a linha mostrar sem abrir: a reação de
+// cada um (a do par escondida, se você ainda não viu) e quantos comentários há.
+export interface EpisodeSocial {
+  myReaction: string | null;
+  // null: o par não reagiu. `emoji` null: reagiu, mas é spoiler para você.
+  partnerReaction: { emoji: string | null } | null;
+  comments: number;
+}
 
 interface EpisodeRowProps {
-  seriesId: string;
-  season: number;
+  code: string;
   number: number;
-  // Dados do TMDB; ausentes quando a busca da temporada falha.
-  details?: SeasonEpisode;
-  status: EpisodeWatchStatus;
-  toggle: QuickToggle;
-  choices: ProgressChoice[];
+  title: string;
+  // Curto, para caber ao lado da imagem: a duração ("62 min") ou a estreia ("Estreia sexta").
+  meta: string | null;
+  stillUrl: string | null;
+  // A imagem de um episódio que você não viu chega borrada; um toque mostra.
+  isStillHidden: boolean;
+  onRevealStill: () => void;
+  mark: EpisodeMarkKind;
   me: Person;
-  // null enquanto ninguém entrou no grupo.
   partner: Person | null;
-  // Episódios que entraram no TMDB depois que a série foi adicionada não podem ser marcados.
+  isNext: boolean;
+  social: EpisodeSocial;
+  // O check é sempre seu: "eu vi". Quem viu junto se resolve na folha do episódio.
+  checked: boolean;
   canMark: boolean;
   isPending: boolean;
-  onChange: (change: ProgressChange) => void;
+  onToggle: () => void;
+  onOpen: (trigger: HTMLElement) => void;
 }
 
-function formatAirDate(iso: string | null): string | null {
-  if (!iso) return null;
-  return new Date(iso).toLocaleDateString('pt-BR', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
-}
-
+// Uma linha da lista de episódios, no formato que os apps de streaming firmaram: a imagem
+// do episódio à esquerda, com a barra de "visto" embaixo (aqui, nas cores de quem viu), e o
+// título ao lado. "Detalhes" deixa claro que a linha abre a folha do episódio (reações,
+// conversa, sinopse); o check marca direto.
 export function EpisodeRow({
-  seriesId,
-  season,
+  code,
   number,
-  details,
-  status,
-  toggle,
-  choices,
+  title,
+  meta,
+  stillUrl,
+  isStillHidden,
+  onRevealStill,
+  mark,
   me,
   partner,
+  isNext,
+  social,
+  checked,
   canMark,
   isPending,
-  onChange,
+  onToggle,
+  onOpen,
 }: EpisodeRowProps) {
-  const [expanded, setExpanded] = useState(false);
-  const detailsId = useId();
-  const code = formatEpisodeCode({ temporada: season, episodio: number });
-
-  const stillUrl = tmdbStillUrl(details?.imagem ?? null);
-  const metaLine = [
-    formatAirDate(details?.dataExibicao ?? null),
-    details?.duracaoMinutos ? `${details.duracaoMinutos} min` : null,
-  ]
-    .filter(Boolean)
-    .join(' · ');
-
-  // O check é sempre seu ("eu vi"); os dois / juntos ficam no ⋯ e no painel.
-  const toggleLabel = toggle.watched ? `Marcar que você viu ${code}` : `Desmarcar ${code} pra você`;
-  // Quem viu (e se foi junto) fica na pílula. O check é neutro e só responde
-  // "está marcado?", para não repetir nem contradizer as cores da pílula.
-  const badge = getWatchBadge(status, me, partner);
+  const label = `E${String(number).padStart(2, '0')}`;
+  const eyebrow = [label, isNext ? 'Próximo' : null, meta].filter(
+    (part): part is string => part !== null,
+  );
 
   return (
-    <li className="border-b border-line py-3 last:border-b-0">
-      <div className="flex items-start gap-3">
-        <div className="relative aspect-video w-24 shrink-0 overflow-hidden rounded-sm bg-surface sm:w-32">
-          {stillUrl ? (
-            <img src={stillUrl} alt="" loading="lazy" className="h-full w-full object-cover" />
-          ) : (
-            <span className="flex h-full w-full items-center justify-center text-sm font-semibold text-fg-subtle">
-              E{number}
-            </span>
-          )}
-        </div>
+    <li className="border-b border-line last:border-b-0">
+      <div className="flex items-start gap-3 py-3">
+        <EpisodeThumb
+          code={code}
+          label={label}
+          stillUrl={stillUrl}
+          isHidden={isStillHidden}
+          isNext={isNext}
+          mark={mark}
+          me={me}
+          partner={partner}
+          social={social}
+          onReveal={onRevealStill}
+          onOpen={onOpen}
+        />
 
         <button
           type="button"
-          onClick={() => setExpanded((value) => !value)}
-          aria-expanded={expanded}
-          aria-controls={expanded ? detailsId : undefined}
-          className="flex min-w-0 flex-1 flex-col items-start gap-0.5 text-left"
+          aria-haspopup="dialog"
+          onClick={(event) => onOpen(event.currentTarget)}
+          className="group flex min-w-0 flex-1 flex-col items-start gap-1 rounded-md text-left"
         >
-          <span className="flex max-w-full items-center gap-2">
-            <span className="shrink-0 text-xs font-semibold text-fg-subtle tabular-nums">
-              {code}
+          <span className="sr-only">
+            {code}. {markLabel(mark, partner)}.{isNext && ' Próximo para você.'}
+          </span>
+          <span
+            aria-hidden
+            className="flex flex-wrap items-center gap-x-1.5 text-xs text-fg-subtle tabular-nums"
+          >
+            {eyebrow.map((part, index) => (
+              <Fragment key={part}>
+                {index > 0 && <span>·</span>}
+                <span
+                  className={cx(
+                    index === 0 && 'font-mono font-semibold text-fg-muted',
+                    part === 'Próximo' && 'font-bold text-accent',
+                  )}
+                >
+                  {part}
+                </span>
+              </Fragment>
+            ))}
+          </span>
+          {meta && <span className="sr-only">{meta}.</span>}
+          <ReactionsForReader social={social} partner={partner} />
+          <span className="line-clamp-2 text-sm leading-snug font-semibold">{title}</span>
+          <span className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
+            <span className="inline-flex h-7 items-center gap-0.5 rounded-full bg-surface-2 pr-1.5 pl-2.5 text-xs font-semibold text-fg-muted transition-colors group-hover:bg-line group-hover:text-fg">
+              Detalhes
+              <ChevronRight size={14} strokeWidth={2.5} aria-hidden />
             </span>
-            {badge && <WatchBadge badge={badge} />}
-          </span>
-          <span className="line-clamp-2 text-sm font-semibold">
-            {details?.titulo ?? `Episódio ${number}`}
-          </span>
-          {metaLine && <span className="text-xs text-fg-subtle">{metaLine}</span>}
-          <span className="mt-0.5 flex items-center gap-1 text-xs text-fg-muted">
-            {expanded ? 'Fechar' : 'Detalhes'}
-            <ChevronDown
-              size={14}
-              aria-hidden
-              className={cx('transition-transform', expanded && 'rotate-180')}
-            />
+            {social.comments > 0 && (
+              <span className="inline-flex items-center gap-1 text-xs text-fg-subtle tabular-nums">
+                <MessageCircle size={13} strokeWidth={2.5} aria-hidden />
+                {social.comments}
+                <span className="sr-only">
+                  {social.comments === 1 ? 'comentário' : 'comentários'}
+                </span>
+              </span>
+            )}
           </span>
         </button>
 
-        <div className="flex shrink-0 items-center">
-          <button
-            type="button"
-            onClick={() => onChange({ watched: toggle.watched, scope: 'me' })}
-            disabled={!canMark || isPending}
-            aria-pressed={toggle.checked}
-            aria-label={toggleLabel}
-            className="flex h-10 w-10 items-center justify-center rounded-md transition-colors hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <span
-              className={cx(
-                'flex h-7 w-7 items-center justify-center rounded-full',
-                toggle.checked ? 'bg-accent text-on-accent' : 'border-2 border-line',
-              )}
-            >
-              {isPending ? (
-                <LoaderCircle size={15} className="animate-spin text-fg" aria-hidden />
-              ) : (
-                toggle.checked && <Check size={16} strokeWidth={3} aria-hidden />
-              )}
-            </span>
-          </button>
-
-          {choices.length > 0 && (
-            <ActionSheet
-              title={details?.titulo ? `${code} · ${details.titulo}` : code}
-              items={choices.map((choice) => ({
-                key: choice.label,
-                label: choice.label,
-                destructive: choice.destructive,
-                onSelect: () =>
-                  onChange({
-                    watched: choice.watched,
-                    scope: choice.scope,
-                    together: choice.together,
-                  }),
-              }))}
-              renderTrigger={(triggerProps) => (
-                <IconButton
-                  {...triggerProps}
-                  aria-label={`Mais opções do ${code}`}
-                  disabled={!canMark || isPending}
-                >
-                  <Ellipsis size={18} />
-                </IconButton>
-              )}
-            />
-          )}
-        </div>
+        <WatchToggle
+          code={code}
+          checked={checked}
+          disabled={!canMark || isPending}
+          isPending={isPending}
+          onToggle={onToggle}
+        />
       </div>
 
       {!canMark && (
-        <p className="mt-2 text-xs text-fg-subtle">
-          Esse episódio saiu depois que a série foi adicionada e ainda não pode ser marcado.
+        <p className="pb-3 pl-35 text-xs text-fg-subtle sm:pl-43">
+          Saiu depois que a série entrou na lista e ainda não pode ser marcado.
         </p>
       )}
-
-      {expanded && (
-        <div id={detailsId} className="mt-3 flex flex-col gap-5 rounded-md bg-surface p-3">
-          {details?.resumo && (
-            <p className="text-sm leading-relaxed text-fg-muted">{details.resumo}</p>
-          )}
-          <EpisodeReactions seriesId={seriesId} season={season} episode={number} enabled />
-          <EpisodeComments seriesId={seriesId} season={season} episode={number} enabled />
-        </div>
-      )}
     </li>
+  );
+}
+
+interface EpisodeThumbProps {
+  code: string;
+  label: string;
+  stillUrl: string | null;
+  isHidden: boolean;
+  isNext: boolean;
+  mark: EpisodeMarkKind;
+  me: Person;
+  partner: Person | null;
+  social: EpisodeSocial;
+  onReveal: () => void;
+  onOpen: (trigger: HTMLElement) => void;
+}
+
+// A imagem do episódio. Escondida: borrada, com o olho riscado, e o primeiro toque só
+// mostra (como o spoiler do Discord). Depois, tocar nela abre o episódio, como o título.
+function EpisodeThumb({
+  code,
+  label,
+  stillUrl,
+  isHidden,
+  isNext,
+  mark,
+  me,
+  partner,
+  social,
+  onReveal,
+  onOpen,
+}: EpisodeThumbProps) {
+  const hidden = isHidden && stillUrl !== null;
+
+  return (
+    <button
+      type="button"
+      onClick={(event) => (hidden ? onReveal() : onOpen(event.currentTarget))}
+      aria-label={hidden ? `Mostrar a imagem de ${code}` : `Abrir ${code}`}
+      aria-haspopup={hidden ? undefined : 'dialog'}
+      className={cx(
+        'relative block aspect-video w-32 shrink-0 rounded-md bg-surface-2 sm:w-40',
+        isNext && 'ring-2 ring-accent ring-offset-2 ring-offset-canvas',
+      )}
+    >
+      {/* O corte fica num filho: o contorno de foco do botão não é cortado junto. */}
+      <span className="absolute inset-0 overflow-hidden rounded-md">
+        {stillUrl ? (
+          <img
+            src={stillUrl}
+            alt=""
+            loading="lazy"
+            className={cx(
+              'h-full w-full object-cover transition-[filter,scale] duration-300',
+              hidden && 'scale-110 blur-md brightness-75',
+            )}
+          />
+        ) : (
+          <span className="flex h-full w-full items-center justify-center font-mono text-base font-semibold text-fg-subtle">
+            {label}
+          </span>
+        )}
+        {hidden && (
+          <span className="absolute inset-0 flex items-center justify-center">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-canvas/55 text-fg backdrop-blur-sm">
+              <EyeOff size={15} strokeWidth={2.25} aria-hidden />
+            </span>
+          </span>
+        )}
+        <ReactionSticker social={social} />
+        <WatchBar kind={mark} me={me} partner={partner} />
+      </span>
+    </button>
+  );
+}
+
+// As reações de vocês coladas no canto da imagem, como figurinhas numa foto. A do par,
+// enquanto é spoiler para você, vira 🙈. Só visual: o leitor de tela ouve pela linha.
+function ReactionSticker({ social }: { social: EpisodeSocial }) {
+  const emojis = [
+    social.myReaction,
+    social.partnerReaction && (social.partnerReaction.emoji ?? '🙈'),
+  ];
+  const shown = emojis.filter((emoji): emoji is string => !!emoji);
+  if (shown.length === 0) return null;
+
+  return (
+    <span
+      aria-hidden
+      className="absolute top-1 right-1 flex items-center gap-0.5 rounded-full bg-canvas/70 px-1.5 py-1 text-xs leading-none backdrop-blur-sm"
+    >
+      {shown.map((emoji, index) => (
+        <span key={index}>{emoji}</span>
+      ))}
+    </span>
+  );
+}
+
+function ReactionsForReader({
+  social,
+  partner,
+}: {
+  social: EpisodeSocial;
+  partner: Person | null;
+}) {
+  const { myReaction, partnerReaction } = social;
+  if (!myReaction && !partnerReaction) return null;
+  const partnerName = partner?.shortName ?? 'Seu par';
+
+  return (
+    <span className="sr-only">
+      {myReaction && `Sua reação: ${myReaction}. `}
+      {partnerReaction &&
+        (partnerReaction.emoji
+          ? `Reação de ${partnerName}: ${partnerReaction.emoji}.`
+          : `${partnerName} reagiu. Assista para ver.`)}
+    </span>
+  );
+}
+
+interface WatchToggleProps {
+  code: string;
+  checked: boolean;
+  disabled: boolean;
+  isPending: boolean;
+  onToggle: () => void;
+}
+
+// O "eu vi": neutro de propósito. A cor de quem viu fica na barra da imagem; o laranja é
+// só do "juntos".
+function WatchToggle({ code, checked, disabled, isPending, onToggle }: WatchToggleProps) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      disabled={disabled}
+      aria-pressed={checked}
+      aria-label={checked ? `Desmarcar ${code} pra você` : `Marcar que você viu ${code}`}
+      className="group flex h-11 w-11 shrink-0 items-center justify-center self-center rounded-full disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      <span
+        className={cx(
+          'flex h-7 w-7 items-center justify-center rounded-full transition-[background-color,box-shadow,scale] duration-150 group-active:scale-90',
+          checked
+            ? 'bg-surface-2 text-fg ring-1 ring-line ring-inset'
+            : 'text-fg-subtle ring-2 ring-line ring-inset group-hover:ring-fg-subtle',
+        )}
+      >
+        {isPending ? (
+          <LoaderCircle size={15} aria-hidden className="animate-spin" />
+        ) : (
+          checked && <Check size={16} strokeWidth={3} aria-hidden />
+        )}
+      </span>
+    </button>
   );
 }

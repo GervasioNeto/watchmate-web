@@ -8,7 +8,8 @@ export function tmdbBackdropUrl(backdropPath: string | null, size: 'w780' | 'ori
   return `https://image.tmdb.org/t/p/${size}${backdropPath}`;
 }
 
-export function tmdbStillUrl(imagem: string | null, size: 'w300' = 'w300') {
+// `original` para a imagem grande da folha do episódio (o TMDB não tem um tamanho médio).
+export function tmdbStillUrl(imagem: string | null, size: 'w300' | 'original' = 'w300') {
   if (!imagem) return null;
   return `https://image.tmdb.org/t/p/${size}${imagem}`;
 }
