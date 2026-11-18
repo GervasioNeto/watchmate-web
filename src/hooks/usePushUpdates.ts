@@ -14,6 +14,11 @@ function keysForTag(tag: string): QueryKey[] {
     case 'invite':
       keys.push(queryKeys.invites.all());
       break;
+    // A entrega ("gift"), abriu ou reagiu ("gift:<id>") e o vale usado ("voucher:<id>").
+    case 'gift':
+    case 'voucher':
+      keys.push(queryKeys.gifts());
+      break;
     // O recado vem junto com o /me.
     case 'note':
       keys.push(queryKeys.me());

@@ -2,6 +2,7 @@ import { queryOptions } from '@tanstack/react-query';
 import { queryKeys } from '@/api/queryKeys';
 import { discoverService } from '@/api/services/discoverService';
 import { episodeService } from '@/api/services/episodeService';
+import { giftService } from '@/api/services/giftService';
 import { groupService } from '@/api/services/groupService';
 import { inboxService } from '@/api/services/inboxService';
 import { inviteService } from '@/api/services/inviteService';
@@ -83,6 +84,10 @@ export const pushQueries = {
 export const inviteQueries = {
   active: () =>
     queryOptions({ queryKey: queryKeys.invites.active(), queryFn: inviteService.active }),
+};
+
+export const giftQueries = {
+  list: () => queryOptions({ queryKey: queryKeys.gifts(), queryFn: giftService.list }),
 };
 
 export const inboxQueries = {

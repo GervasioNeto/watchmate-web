@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import { ConnectionNotice } from '@/components/ConnectionNotice';
+import { GiftRevealHost } from '@/components/gifts/GiftRevealHost';
 import { TabBar } from '@/components/navigation/TabBar';
 import { useAppBadge, useInboxUnseen } from '@/hooks/useInbox';
 import { usePushSync } from '@/hooks/usePushNotifications';
@@ -7,8 +8,8 @@ import { usePushUpdates } from '@/hooks/usePushUpdates';
 import { RequireAuth } from '@/routes/RequireAuth';
 
 // A casca das páginas de quem já entrou: a barra de destinos no celular (com o espaço dela
-// reservado no fim de cada página), o aviso de conexão, a inscrição de push em dia e o que
-// chega por push com o app aberto.
+// reservado no fim de cada página), o aviso de conexão, a inscrição de push em dia, o que
+// chega por push com o app aberto e a surpresa dos presentes (GiftRevealHost).
 export function AppLayout() {
   return (
     <RequireAuth>
@@ -18,6 +19,7 @@ export function AppLayout() {
       </div>
       <ConnectionNotice />
       <TabBar />
+      <GiftRevealHost />
     </RequireAuth>
   );
 }
