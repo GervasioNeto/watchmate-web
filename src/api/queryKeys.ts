@@ -26,6 +26,8 @@ export const queryKeys = {
     all: () => ['invites'] as const,
     active: () => [...queryKeys.invites.all(), 'active'] as const,
   },
+  // Os presentes da pessoa (recebidos e dados), com a data de início do namoro.
+  gifts: () => ['gifts'] as const,
   // "Entre vocês": a lista e a contagem do pontinho no ícone.
   inbox: {
     all: () => ['inbox'] as const,

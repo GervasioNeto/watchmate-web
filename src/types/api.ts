@@ -312,7 +312,11 @@ export type InboxItemType =
   | 'reaction'
   | 'series-added'
   | 'episode-watched'
-  | 'season-finished';
+  | 'season-finished'
+  // Presentes: chegou um para você, o seu foi aberto, usaram um vale seu.
+  | 'gift'
+  | 'gift-opened'
+  | 'voucher-used';
 
 export interface InboxItem {
   id: string;
@@ -333,4 +337,68 @@ export interface InboxItem {
   // Comentário ou reação num episódio que você ainda não viu: existe, mas não aparece.
   hidden: boolean;
   invite: Invite | null;
+  gift: InboxGift | null;
+}
+
+// ---------- Presentes ----------
+
+export type GiftOccasion = 'anniversary' | 'valentines' | 'just-because';
+export type GiftWrap = 'passion' | 'flame' | 'night';
+
+export interface GiftVoucher {
+  id: string;
+  // Sem o "Vale" na frente: o ingresso já diz VALE ("Uma maratona com pipoca").
+  text: string;
+  emoji: string | null;
+  usedAt: string | null;
+}
+
+// Agendado, o presente já aparece para quem vai receber, embrulhado e trancado até
+// `deliverAt` (`delivered: false`): dá para ver que existe e quando abre, mas a carta e os
+// vales só chegam na hora (antes disso, para essa pessoa, `message` é null e `vouchers` vem
+// vazio). Quem deu vê tudo, sempre.
+export interface Gift {
+  id: string;
+  fromId: string;
+  toId: string;
+  occasion: GiftOccasion;
+  wrap: GiftWrap;
+  message: string | null;
+  deliverAt: string;
+  // Já pode abrir.
+  delivered: boolean;
+  openedAt: string | null;
+  reaction: string | null;
+  reactedAt: string | null;
+  vouchers: GiftVoucher[];
+  createdAt: string;
+}
+
+export interface GiftsResponse {
+  received: Gift[];
+  sent: Gift[];
+}
+
+export interface CreateGiftInput {
+  occasion: GiftOccasion;
+  wrap: GiftWrap;
+  message: string;
+  // null: entregar agora.
+  deliverAt: string | null;
+  vouchers: Array<{ text: string; emoji: string | null }>;
+  // O fuso do celular: o push do presente trancado diz "abre amanhã à meia-noite" na hora
+  // de vocês.
+  timeZone: string;
+}
+
+// O presente, resumido, dentro de um aviso de "Entre vocês".
+export interface InboxGift {
+  id: string;
+  occasion: GiftOccasion;
+  wrap: GiftWrap;
+  openedAt: string | null;
+  reaction: string | null;
+  // Quando abre. Trancado (agendado, a hora ainda não chegou): `locked`.
+  opensAt: string;
+  locked: boolean;
 }

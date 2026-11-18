@@ -4,6 +4,7 @@ import { CoupleHero } from '@/components/couple/CoupleHero';
 import { CoupleWeek } from '@/components/couple/CoupleWeek';
 import { MonthCalendar } from '@/components/couple/MonthCalendar';
 import { RecentActivity } from '@/components/couple/RecentActivity';
+import { GiftsSection } from '@/components/gifts/GiftsSection';
 import { EditableTextRow, SettingsList } from '@/components/ui/SettingsList';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useCouple } from '@/hooks/useCouple';
@@ -12,8 +13,8 @@ import { useGroup, usePatchGroup } from '@/hooks/useGroup';
 import { useListEntries } from '@/hooks/useListEntries';
 import { collectWatchEvents } from '@/lib/coupleActivity';
 
-// Tudo sobre a dupla num lugar só: quem são e o placar, a semana, o mês, o que cada um
-// viu por último e, no fim, os ajustes do grupo. Os números saem do progresso que a
+// Tudo sobre a dupla num lugar só: quem são e o placar, os presentes, a semana, o mês, o
+// que cada um viu por último e, no fim, os ajustes do grupo. Os números saem do progresso que a
 // lista já carrega (o mesmo cache).
 export function CouplePage() {
   const { me, partner } = useCouple();
@@ -49,6 +50,8 @@ export function CouplePage() {
           ) : (
             <Skeleton className="h-80 rounded-lg" />
           )}
+
+          {partner && <GiftsSection />}
 
           {me && stats && since ? (
             <>

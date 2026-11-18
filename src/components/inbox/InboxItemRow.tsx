@@ -1,15 +1,23 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { LockKeyhole } from 'lucide-react';
+import { GiftBox } from '@/components/gifts/GiftBox';
 import { InviteStamp } from '@/components/invite/InviteStamp';
 import { Avatar } from '@/components/ui/Avatar';
 import { cx } from '@/lib/cx';
 import { formatTimeAgo } from '@/lib/dates';
+import { formatOpening, occasionOf, wrapOf } from '@/lib/gifts';
 import { inboxDestination } from '@/lib/inbox';
 import { describeInviteTime, getTicketState } from '@/lib/invites';
 import type { Person } from '@/lib/people';
 import { formatEpisodeCode } from '@/lib/progress';
 import { tmdbPosterUrl } from '@/lib/tmdb';
-import type { InboxItem } from '@/types/api';
+import type { InboxGift, InboxItem } from '@/types/api';
+
+// Trancado agora (a lista pode ter vindo antes de a hora chegar).
+function isLockedGift(gift: InboxGift, now: Date): boolean {
+  return new Date(gift.opensAt) > now;
+}
 
 interface InboxItemRowProps {
   item: InboxItem;
@@ -92,6 +100,12 @@ function badgeOf(item: InboxItem): string {
       return '👀';
     case 'series-added':
       return '✨';
+    case 'gift':
+      return '🎁';
+    case 'gift-opened':
+      return item.emoji ?? '🥹';
+    case 'voucher-used':
+      return '🎟️';
   }
 }
 
@@ -165,6 +179,23 @@ function Sentence({ item, now }: { item: InboxItem; now: Date }): ReactNode {
       );
     case 'series-added':
       return <>adicionou {series} à lista de vocês</>;
+    case 'gift':
+      if (item.gift && isLockedGift(item.gift, now)) {
+        return (
+          <>
+            deixou um presente pra você. Abre {formatOpening(new Date(item.gift.opensAt), now)} 🔒
+          </>
+        );
+      }
+      return item.gift?.openedAt ? <>te deu um presente</> : <>deixou um presente pra você 💝</>;
+    case 'gift-opened':
+      return item.emoji ? (
+        <>abriu seu presente e reagiu com {item.emoji}</>
+      ) : (
+        <>abriu seu presente</>
+      );
+    case 'voucher-used':
+      return <>quer usar um vale do seu presente. Hora de cumprir!</>;
   }
 }
 
@@ -174,6 +205,49 @@ function capitalize(text: string): string {
 
 // O que vai dentro da linha, quando tem: o texto, o spoiler escondido ou o canhoto do convite.
 function Preview({ item, now }: { item: InboxItem; now: Date }) {
+  // O presente: a caixinha no embrulho dele e o título da ocasião (o que tem dentro só
+  // aparece ao abrir).
+  if ((item.type === 'gift' || item.type === 'gift-opened') && item.gift) {
+    return (
+      <span className="flex items-center gap-2.5 self-start rounded-md bg-surface-2 py-1.5 pr-3 pl-1.5">
+        <GiftBox
+          wrap={wrapOf(item.gift.wrap)}
+          lock={item.type === 'gift' && isLockedGift(item.gift, now) ? 'locked' : undefined}
+          size={32}
+        />
+        <span className="text-xs font-semibold text-fg">
+          {occasionOf(item.gift.occasion).headline}
+        </span>
+        {item.type === 'gift' &&
+          !item.gift.openedAt &&
+          (isLockedGift(item.gift, now) ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-fg/10 px-2 py-0.5 text-[11px] font-bold">
+              <LockKeyhole size={11} strokeWidth={2.75} aria-hidden />
+              Trancado
+            </span>
+          ) : (
+            <span className="rounded-full bg-accent px-2 py-0.5 text-[11px] font-bold text-on-accent">
+              Abrir
+            </span>
+          ))}
+      </span>
+    );
+  }
+
+  if (item.type === 'voucher-used' && item.text) {
+    return (
+      <span className="flex items-center gap-2 self-start rounded-md border border-dashed border-line py-1.5 pr-3 pl-2.5 text-xs">
+        <span aria-hidden className="text-base leading-none">
+          {item.emoji ?? '🎟️'}
+        </span>
+        <span>
+          <span className="font-black tracking-[0.14em] text-fg-subtle uppercase">Vale </span>
+          <span className="font-semibold text-fg">{item.text}</span>
+        </span>
+      </span>
+    );
+  }
+
   if (item.type === 'note' && item.text) {
     return (
       <span className="self-start rounded-lg rounded-tl-sm bg-note px-3 py-2 text-sm leading-snug font-semibold wrap-break-word text-on-note">
