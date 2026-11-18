@@ -5,6 +5,8 @@ import type { InboxItem } from '@/types/api';
 // (ver o ?episode= em EpisodesSection); o recado fica no card da dupla, no topo da lista.
 export function inboxDestination(item: InboxItem): string {
   if (item.type === 'note') return '/my-list';
+  // Os presentes moram na Dupla: o recebido abre de novo, o dado acende na lista.
+  if (item.gift) return `/couple?gift=${item.gift.id}`;
   if (!item.series) return '/my-list';
   const seriesPath = `/series/${item.series.id}`;
   if ((item.type === 'comment' || item.type === 'reaction') && item.season && item.episode) {

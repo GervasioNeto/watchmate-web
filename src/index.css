@@ -177,6 +177,35 @@
     }
   }
 
+  /* O cartão do presente sobe de dentro da caixa, depois da explosão de corações. */
+  --animate-card-rise: card-rise 650ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+
+  @keyframes card-rise {
+    from {
+      opacity: 0;
+      transform: translateY(2.5rem) scale(0.96);
+    }
+  }
+
+  /* Trocou o papel na folha de montar: a caixa nova assenta com um pulinho. */
+  --animate-wrap-in: wrap-in 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  @keyframes wrap-in {
+    from {
+      opacity: 0.4;
+      transform: scale(0.86) rotate(-4deg);
+    }
+  }
+
+  /* "Toque para abrir": respira devagar embaixo da caixa. */
+  --animate-breathe: breathe 1800ms ease-in-out infinite;
+
+  @keyframes breathe {
+    50% {
+      opacity: 0.45;
+    }
+  }
+
   /* "Esperando Leila…": os três pontinhos acendem um depois do outro. */
   --animate-wait-dot: wait-dot 1200ms ease-in-out infinite;
 
@@ -283,6 +312,253 @@ dialog.sheet[open]::backdrop {
 /* Enquanto uma folha está aberta, a página atrás não rola. */
 html:has(dialog.sheet[open]) {
   overflow: hidden;
+}
+
+/*
+ * A surpresa do presente (GiftReveal): um <dialog> de tela inteira, por cima de tudo (até da
+ * barra de baixo), com o fundo quase preto. A caixa (GiftBox) balança esperando o toque;
+ * aberta, chacoalha, a tampa voa com o laço e o cartão sobe.
+ */
+dialog.gift-reveal {
+  inset: 0;
+  margin: 0;
+  width: 100%;
+  max-width: 100%;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+}
+
+/* Sólido: nada da página aparece atrás da surpresa. */
+dialog.gift-reveal::backdrop {
+  background: rgb(10 6 10);
+}
+
+dialog.gift-reveal[open] {
+  animation: sheet-backdrop-in 260ms ease-out;
+}
+
+html:has(dialog.gift-reveal[open]) {
+  overflow: hidden;
+}
+
+.gift-box {
+  transform-origin: 50% 92%;
+}
+
+.gift-box.is-closed {
+  animation: gift-wobble 2800ms ease-in-out 600ms infinite;
+}
+
+.gift-box.is-opening {
+  animation: gift-shake 420ms ease-in-out;
+}
+
+.gift-box .gift-lid {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+
+.gift-box.is-opening .gift-lid,
+.gift-box.is-open .gift-lid {
+  animation: gift-lid-off 760ms cubic-bezier(0.2, 0.8, 0.2, 1) 360ms both;
+}
+
+@keyframes gift-wobble {
+  0%,
+  34%,
+  100% {
+    transform: rotate(0);
+  }
+  8% {
+    transform: rotate(-5deg);
+  }
+  16% {
+    transform: rotate(4deg);
+  }
+  24% {
+    transform: rotate(-2deg);
+  }
+}
+
+@keyframes gift-shake {
+  20% {
+    transform: translateX(-6px) rotate(-6deg);
+  }
+  40% {
+    transform: translateX(6px) rotate(6deg);
+  }
+  60% {
+    transform: translateX(-4px) rotate(-3deg);
+  }
+  80% {
+    transform: translateX(3px) rotate(2deg);
+  }
+}
+
+@keyframes gift-lid-off {
+  40% {
+    opacity: 1;
+    transform: translateY(-80px) rotate(-14deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-40px, -190px) rotate(-32deg);
+  }
+}
+
+/* A luz de dentro acende quando a tampa sai, e fica pulsando na caixa vazia. */
+.gift-box.is-opening .gift-inside {
+  animation: gift-light-in 520ms ease-out 520ms both;
+}
+
+.gift-box.is-empty .gift-inside path {
+  animation: gift-light-pulse 1400ms ease-in-out infinite;
+}
+
+@keyframes gift-light-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes gift-light-pulse {
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* Trancado e tocado: a caixa chacoalha e não abre ("ainda não!"). */
+.gift-denied {
+  animation: gift-shake 420ms ease-in-out;
+  transform-origin: 50% 92%;
+}
+
+/* O cadeado: na hora de destrancar, a alça sobe e ele cai da fita. */
+.gift-lock {
+  transform-box: fill-box;
+  transform-origin: 50% 0;
+}
+
+.gift-lock-shackle {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+
+.gift-lock.is-unlocking .gift-lock-shackle {
+  animation: gift-lock-shackle 260ms ease-out both;
+}
+
+.gift-lock.is-unlocking {
+  animation: gift-lock-drop 640ms cubic-bezier(0.55, 0, 0.85, 0.35) 300ms both;
+}
+
+@keyframes gift-lock-shackle {
+  to {
+    transform: translateY(-7px);
+  }
+}
+
+@keyframes gift-lock-drop {
+  to {
+    opacity: 0;
+    transform: translateY(70px) rotate(18deg);
+  }
+}
+
+/*
+ * O que tinha dentro (GiftContents) sai da caixa. Antes de a tela pintar, tudo está
+ * invisível (`measuring`) enquanto o React mede onde cada coisa vai pousar; aí vira
+ * `emerging`: a carta e os vales ([data-emerge]) partem do centro da caixa (--emerge-x/y),
+ * pequenos e girados, e pousam no lugar com um quique; o resto ([data-reveal]) sobe devagar.
+ * --reveal-order dá o ritmo (ver reveal/choreography.ts).
+ */
+.gift-contents[data-stage='measuring'] [data-emerge],
+.gift-contents[data-stage='measuring'] [data-reveal] {
+  opacity: 0;
+}
+
+.gift-contents[data-stage='emerging'] [data-emerge] {
+  animation: gift-emerge 860ms cubic-bezier(0.22, 1.25, 0.36, 1) both;
+  animation-delay: calc(var(--reveal-order, 0) * 150ms);
+}
+
+.gift-contents[data-stage='emerging'] [data-reveal] {
+  animation: gift-fade-up 560ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: calc(var(--reveal-order, 0) * 150ms);
+}
+
+@keyframes gift-emerge {
+  0% {
+    opacity: 0;
+    transform: translate(var(--emerge-x, 0), var(--emerge-y, 3rem)) scale(0.12)
+      rotate(var(--emerge-rot, 0deg));
+  }
+  16% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes gift-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+/* A caixa vazia: dá um pulinho quando o conteúdo sai e, no fim, afunda e some. */
+.gift-spent {
+  animation: gift-spent-sink 700ms cubic-bezier(0.55, 0, 0.85, 0.35) var(--spent-delay, 900ms) both;
+}
+
+.gift-spent > svg {
+  animation: gift-spent-hop 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes gift-spent-hop {
+  40% {
+    transform: translateY(-8px) scale(1.03);
+  }
+}
+
+@keyframes gift-spent-sink {
+  to {
+    opacity: 0;
+    transform: translateY(48px) scale(0.86);
+  }
+}
+
+/* Os coraçõezinhos que sobem devagar no fundo, o tempo todo. */
+.gift-float-heart {
+  animation: gift-float var(--float-duration, 9s) linear var(--float-delay, 0s) infinite;
+}
+
+@keyframes gift-float {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(var(--float-scale, 1));
+  }
+  10% {
+    opacity: var(--float-opacity, 0.5);
+  }
+  50% {
+    transform: translate(var(--float-sway, 12px), -55vh) scale(var(--float-scale, 1));
+  }
+  90% {
+    opacity: var(--float-opacity, 0.5);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(0, -110vh) scale(var(--float-scale, 1));
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
